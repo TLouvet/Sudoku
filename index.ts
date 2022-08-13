@@ -1,4 +1,6 @@
+import { SIDE_LENGTH } from "./script/constants";
 import { Sudoku } from "./script/Sudoku";
+import { SudokuHTMLHandler } from "./script/SudokuHTMLHandler";
 
 const sudoku = new Sudoku();
 bootstrap();
@@ -12,6 +14,15 @@ document.getElementById("generator")?.addEventListener("click", () => {
 document.getElementById("removeBack")?.addEventListener("click", () => {
   sudoku.htmlHandler.clearNodesBackground();
 });
+
+document.getElementById('removeOne')?.addEventListener("click", (e) => {
+  sudoku.erase();
+  SudokuHTMLHandler.currentSelectedBtn = "";
+  // remove btns selection
+  for (let i = 0; i < SIDE_LENGTH * SIDE_LENGTH; i++) {
+    document.getElementById(`square-${i}`)?.classList.remove("selected");
+  }
+})
 
 /**
  * Starter, creating the base HTML

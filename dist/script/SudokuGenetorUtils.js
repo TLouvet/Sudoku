@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuGeneratorUtils = void 0;
+const constants_1 = require("./constants");
 class SudokuGeneratorUtils {
-    constructor(SIDE_LENGTH = 9) {
-        this.SIDE_LENGTH = SIDE_LENGTH;
-    }
+    constructor() { }
     /**
      * Check which values could fit into current evaluated square
      * @param matrix
@@ -13,7 +12,7 @@ class SudokuGeneratorUtils {
      * @returns
      */
     getPossibleValuesForOneSquare(matrix, row, col) {
-        const possibilities = Array(this.SIDE_LENGTH).fill(0).map((_, i) => i + 1);
+        const possibilities = Array(constants_1.SIDE_LENGTH).fill(0).map((_, i) => i + 1);
         const lineChecked = this.keepNonCommonOnLine(possibilities, matrix[row]);
         const columnChecked = this.keepNonCommonOnColumn(lineChecked, matrix, row, col);
         const allChecked = this.keepNonCommonOnSquare(columnChecked, matrix, row, col);
@@ -28,7 +27,7 @@ class SudokuGeneratorUtils {
     getNextSquareCol(rowsend, col) {
         if (rowsend != 0)
             return col;
-        if (col + 1 > this.SIDE_LENGTH - 1)
+        if (col + 1 > constants_1.SIDE_LENGTH - 1)
             return 0;
         return col + 1;
     }

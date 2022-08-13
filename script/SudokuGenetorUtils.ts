@@ -1,8 +1,9 @@
+import { SIDE_LENGTH } from "./constants";
 import { GridNode } from "./GridNode";
 
 export class SudokuGeneratorUtils {
 
-  constructor(private SIDE_LENGTH: number = 9) { }
+  constructor() { }
 
   /**
    * Check which values could fit into current evaluated square
@@ -12,7 +13,7 @@ export class SudokuGeneratorUtils {
    * @returns 
    */
   getPossibleValuesForOneSquare(matrix: GridNode[][], row: number, col: number) {
-    const possibilities = Array(this.SIDE_LENGTH).fill(0).map((_, i) => i + 1);
+    const possibilities = Array(SIDE_LENGTH).fill(0).map((_, i) => i + 1);
     const lineChecked = this.keepNonCommonOnLine(possibilities, matrix[row]);
     const columnChecked = this.keepNonCommonOnColumn(lineChecked, matrix, row, col);
     const allChecked = this.keepNonCommonOnSquare(columnChecked, matrix, row, col);
@@ -27,7 +28,7 @@ export class SudokuGeneratorUtils {
    */
   getNextSquareCol(rowsend: number, col: number) {
     if (rowsend != 0) return col;
-    if (col + 1 > this.SIDE_LENGTH - 1) return 0;
+    if (col + 1 > SIDE_LENGTH - 1) return 0;
     return col + 1;
   }
 

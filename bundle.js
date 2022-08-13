@@ -1,8 +1,10 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
+const constants_1 = require("./script/constants");
 const Sudoku_1 = require("./script/Sudoku");
+const SudokuHTMLHandler_1 = require("./script/SudokuHTMLHandler");
 const sudoku = new Sudoku_1.Sudoku();
 bootstrap();
 (_a = document.getElementById("generator")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
@@ -12,6 +14,15 @@ bootstrap();
 });
 (_b = document.getElementById("removeBack")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
     sudoku.htmlHandler.clearNodesBackground();
+});
+(_c = document.getElementById('removeOne')) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
+    var _a;
+    sudoku.erase();
+    SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn = "";
+    // remove btns selection
+    for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
+        (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("selected");
+    }
 });
 /**
  * Starter, creating the base HTML
@@ -50,10 +61,13 @@ function listen() {
     }
 }
 
-},{"./script/Sudoku":3}],2:[function(require,module,exports){
+},{"./script/Sudoku":3,"./script/SudokuHTMLHandler":5,"./script/constants":6}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
+const constants_1 = require("./constants");
+const Sudoku_1 = require("./Sudoku");
+const SudokuHTMLHandler_1 = require("./SudokuHTMLHandler");
 /**
  * Representation of a node
  */
@@ -87,18 +101,21 @@ class GridNode {
     * @param col
     * @returns
     */
-    createSingleSquare(row, col, SIDE_LENGTH = 9) {
+    createSingleSquare(row, col) {
         const square = document.createElement("div");
-        square.setAttribute("id", `square-${row * SIDE_LENGTH + col}`);
+        square.setAttribute("id", `square-${row * constants_1.SIDE_LENGTH + col}`);
         square.setAttribute("class", "square");
         // Make selector buttons change depending on selection
         square.addEventListener("click", () => {
-            for (let i = 0; i < SIDE_LENGTH; i++) {
-                const btn = document.getElementById(`btn-selector-${i}`);
-                btn === null || btn === void 0 ? void 0 : btn.classList.remove('btn-current');
-                if ((btn === null || btn === void 0 ? void 0 : btn.innerText) === square.innerText) {
-                    btn.classList.add('btn-current');
+            if (square.innerText === '') {
+                // square is empty
+                if (!Sudoku_1.Sudoku.prototype.isCorrect(Number(SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn), row, col)) {
+                    square.classList.add("wrong");
                 }
+                else {
+                    square.classList.remove("wrong");
+                }
+                square.innerText = SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn;
             }
         });
         return square;
@@ -106,22 +123,22 @@ class GridNode {
 }
 exports.GridNode = GridNode;
 
-},{}],3:[function(require,module,exports){
+},{"./Sudoku":3,"./SudokuHTMLHandler":5,"./constants":6}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sudoku = void 0;
+const constants_1 = require("./constants");
 const GridNode_1 = require("./GridNode");
 const SudokuGenetorUtils_1 = require("./SudokuGenetorUtils");
 const SudokuHTMLHandler_1 = require("./SudokuHTMLHandler");
 class Sudoku {
     constructor(matrix = []) {
         this.matrix = matrix;
-        this.SIDE_LENGTH = 9;
         this.utils = new SudokuGenetorUtils_1.SudokuGeneratorUtils();
-        this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler(this.SIDE_LENGTH);
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
+        this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler();
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             const arr = [];
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
                 arr.push(new GridNode_1.GridNode());
             }
             this.matrix.push(arr);
@@ -138,11 +155,12 @@ class Sudoku {
      * Reinitialize all of the values to null, in order to regenerate new version
      */
     clearMatrix() {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const node = document.getElementById(`square-${i * this.SIDE_LENGTH + j}`);
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
                 node === null || node === void 0 ? void 0 : node.removeAttribute("contenteditable");
                 node === null || node === void 0 ? void 0 : node.classList.remove("modifiable");
+                node === null || node === void 0 ? void 0 : node.classList.remove("wrong");
                 this.matrix[i][j].reinitiate();
             }
         }
@@ -161,14 +179,14 @@ class Sudoku {
             return null;
         }
         // If we get to this specific point, then we have found a complete grid and need to quit as the for loop would reset to 0;
-        if (row == this.SIDE_LENGTH - 1 && col == this.SIDE_LENGTH - 1) {
+        if (row == constants_1.SIDE_LENGTH - 1 && col == constants_1.SIDE_LENGTH - 1) {
             matrix[row][col].setValue(possibilities[0]);
             return matrix;
         }
         // Shuffle Array of possibilities to generate multiple grids
         possibilities.sort(() => Math.random() > 0.5 ? 1 : -1);
         // ensure next does not go out of range
-        const rowsend = row + 1 > this.SIDE_LENGTH - 1 ? 0 : row + 1;
+        const rowsend = row + 1 > constants_1.SIDE_LENGTH - 1 ? 0 : row + 1;
         const colsend = this.utils.getNextSquareCol(rowsend, col);
         for (let i = 0; i < possibilities.length; i++) {
             matrix[row][col].setValue(possibilities[i]);
@@ -181,10 +199,11 @@ class Sudoku {
         matrix[row][col].setValue(null);
         return null;
     }
+    // Disgusting atm -- TODO refactor    
     addSquareListeners() {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const node = document.getElementById(`square-${i * this.SIDE_LENGTH + j}`);
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
                 if (this.matrix[i][j].isModifiable()) {
                     node === null || node === void 0 ? void 0 : node.setAttribute("contenteditable", "true");
                     node === null || node === void 0 ? void 0 : node.classList.add("modifiable");
@@ -204,11 +223,13 @@ class Sudoku {
                             node.classList.remove("selected");
                         }
                         // Buttons selectors update
-                        for (let x = 0; x < 9; x++) {
-                            const selector = document.getElementById(`btn-selector-${x}`);
-                            selector === null || selector === void 0 ? void 0 : selector.classList.remove("btn-current");
-                            if ((selector === null || selector === void 0 ? void 0 : selector.innerText) === String(e.key)) {
-                                selector.classList.add("btn-current");
+                        if (!isBackspace) {
+                            for (let x = 0; x < 9; x++) {
+                                const selector = document.getElementById(`btn-selector-${x}`);
+                                selector === null || selector === void 0 ? void 0 : selector.classList.remove("btn-current");
+                                if ((selector === null || selector === void 0 ? void 0 : selector.innerText) === String(e.key)) {
+                                    selector.classList.add("btn-current");
+                                }
                             }
                         }
                         // Verify process
@@ -224,10 +245,13 @@ class Sudoku {
         }
     }
     ;
+    erase() {
+        this.htmlHandler.erase(this.matrix);
+    }
     isCorrect(value, row, col) {
-        const firstRowIndex = row * this.SIDE_LENGTH;
+        const firstRowIndex = row * constants_1.SIDE_LENGTH;
         // Row 
-        for (let i = firstRowIndex; i < firstRowIndex + this.SIDE_LENGTH; i++) {
+        for (let i = firstRowIndex; i < firstRowIndex + constants_1.SIDE_LENGTH; i++) {
             const node = document.getElementById(`square-${i}`);
             if ((node === null || node === void 0 ? void 0 : node.innerText) === String(value))
                 return false;
@@ -239,11 +263,11 @@ class Sudoku {
                 return false;
         }
         // Sub square
-        const { min: minR, max: maxR } = this.utils.getMinMaxPos(row);
-        const { min: minC, max: maxC } = this.utils.getMinMaxPos(col);
+        const { min: minR, max: maxR } = SudokuGenetorUtils_1.SudokuGeneratorUtils.prototype.getMinMaxPos(row);
+        const { min: minC, max: maxC } = SudokuGenetorUtils_1.SudokuGeneratorUtils.prototype.getMinMaxPos(col);
         for (let x = minR; x < maxR; x++) {
             for (let y = minC; y < maxC; y++) {
-                const node = document.getElementById(`square-${x * this.SIDE_LENGTH + y}`);
+                const node = document.getElementById(`square-${x * constants_1.SIDE_LENGTH + y}`);
                 if ((node === null || node === void 0 ? void 0 : node.innerText) === String(value))
                     return false;
             }
@@ -253,14 +277,13 @@ class Sudoku {
 }
 exports.Sudoku = Sudoku;
 
-},{"./GridNode":2,"./SudokuGenetorUtils":4,"./SudokuHTMLHandler":5}],4:[function(require,module,exports){
+},{"./GridNode":2,"./SudokuGenetorUtils":4,"./SudokuHTMLHandler":5,"./constants":6}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuGeneratorUtils = void 0;
+const constants_1 = require("./constants");
 class SudokuGeneratorUtils {
-    constructor(SIDE_LENGTH = 9) {
-        this.SIDE_LENGTH = SIDE_LENGTH;
-    }
+    constructor() { }
     /**
      * Check which values could fit into current evaluated square
      * @param matrix
@@ -269,7 +292,7 @@ class SudokuGeneratorUtils {
      * @returns
      */
     getPossibleValuesForOneSquare(matrix, row, col) {
-        const possibilities = Array(this.SIDE_LENGTH).fill(0).map((_, i) => i + 1);
+        const possibilities = Array(constants_1.SIDE_LENGTH).fill(0).map((_, i) => i + 1);
         const lineChecked = this.keepNonCommonOnLine(possibilities, matrix[row]);
         const columnChecked = this.keepNonCommonOnColumn(lineChecked, matrix, row, col);
         const allChecked = this.keepNonCommonOnSquare(columnChecked, matrix, row, col);
@@ -284,7 +307,7 @@ class SudokuGeneratorUtils {
     getNextSquareCol(rowsend, col) {
         if (rowsend != 0)
             return col;
-        if (col + 1 > this.SIDE_LENGTH - 1)
+        if (col + 1 > constants_1.SIDE_LENGTH - 1)
             return 0;
         return col + 1;
     }
@@ -339,14 +362,16 @@ class SudokuGeneratorUtils {
 }
 exports.SudokuGeneratorUtils = SudokuGeneratorUtils;
 
-},{}],5:[function(require,module,exports){
+},{"./constants":6}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
+const constants_1 = require("./constants");
 const GridNode_1 = require("./GridNode");
 class SudokuHTMLHandler {
-    constructor(SIDE_LENGTH = 9) {
-        this.SIDE_LENGTH = SIDE_LENGTH;
+    constructor() { }
+    getCurrentSelectedValue() {
+        return SudokuHTMLHandler.currentSelectedBtn;
     }
     /**
      *HTML CSS MATRIX creation -- generates only the squares, not the content
@@ -357,7 +382,7 @@ class SudokuHTMLHandler {
         if (!boardContainer) {
             throw new Error("Aucun élément n'existe avec l'id donné");
         }
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             boardContainer.appendChild(this.createLine(i));
         }
         this.setLargerBorders();
@@ -371,7 +396,7 @@ class SudokuHTMLHandler {
         const div = document.createElement("div");
         div.setAttribute('id', `line-${row}`);
         div.setAttribute("class", "line");
-        for (let col = 0; col < this.SIDE_LENGTH; col++) {
+        for (let col = 0; col < constants_1.SIDE_LENGTH; col++) {
             div.appendChild(GridNode_1.GridNode.prototype.createSingleSquare(row, col));
         }
         return div;
@@ -405,9 +430,9 @@ class SudokuHTMLHandler {
     * @param matrix - Board Matrix
     */
     putToHTML(matrix) {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const id = i * this.SIDE_LENGTH + j;
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const id = i * constants_1.SIDE_LENGTH + j;
                 const node = document.getElementById(`square-${id}`);
                 if (node) {
                     node.innerText = Math.random() > 0.55 ? matrix[i][j].getValue().toString() : ""; // Quand on enlève ici il faut aussi modif la matrix du coup
@@ -420,11 +445,16 @@ class SudokuHTMLHandler {
      * If a value was selected, remove squares with highlight background
      */
     clearNodesBackground() {
+        var _a;
         for (let x = 0; x < 81; x++) {
             const node = document.getElementById(`square-${x}`);
             if (node === null || node === void 0 ? void 0 : node.classList.contains("selected"))
                 node.classList.remove("selected");
         }
+        for (let i = 0; i < 9; i++) {
+            const btn = (_a = document.getElementById(`btn-selector-${i}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("btn-current");
+        }
+        SudokuHTMLHandler.currentSelectedBtn = "";
     }
     generateSelectors() {
         const parent = document.getElementById("selectors");
@@ -440,6 +470,7 @@ class SudokuHTMLHandler {
                     (_a = document.getElementById(`btn-selector-${j}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("btn-current");
                 }
                 btn.classList.add("btn-current");
+                SudokuHTMLHandler.currentSelectedBtn = btn.innerText;
             });
             parent === null || parent === void 0 ? void 0 : parent.appendChild(btn);
         }
@@ -454,7 +485,30 @@ class SudokuHTMLHandler {
                 node.classList.add("selected");
         }
     }
+    erase(matrix) {
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            const btn = document.getElementById(`btn-selector-${i}`);
+            btn === null || btn === void 0 ? void 0 : btn.classList.remove('btn-current');
+            // Effacer aussi les cases sélectionnées
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                if (matrix[i][j].isModifiable()) {
+                    const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
+                    if (node) {
+                        node.innerText = "";
+                        node.classList.remove("selected", "wrong");
+                    }
+                }
+            }
+        }
+    }
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
+SudokuHTMLHandler.currentSelectedBtn = "";
 
-},{"./GridNode":2}]},{},[1]);
+},{"./GridNode":2,"./constants":6}],6:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SIDE_LENGTH = void 0;
+exports.SIDE_LENGTH = 9;
+
+},{}]},{},[1]);

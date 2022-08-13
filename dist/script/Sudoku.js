@@ -1,18 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Sudoku = void 0;
+const constants_1 = require("./constants");
 const GridNode_1 = require("./GridNode");
 const SudokuGenetorUtils_1 = require("./SudokuGenetorUtils");
 const SudokuHTMLHandler_1 = require("./SudokuHTMLHandler");
 class Sudoku {
     constructor(matrix = []) {
         this.matrix = matrix;
-        this.SIDE_LENGTH = 9;
         this.utils = new SudokuGenetorUtils_1.SudokuGeneratorUtils();
-        this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler(this.SIDE_LENGTH);
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
+        this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler();
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             const arr = [];
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
                 arr.push(new GridNode_1.GridNode());
             }
             this.matrix.push(arr);
@@ -29,11 +29,12 @@ class Sudoku {
      * Reinitialize all of the values to null, in order to regenerate new version
      */
     clearMatrix() {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const node = document.getElementById(`square-${i * this.SIDE_LENGTH + j}`);
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
                 node === null || node === void 0 ? void 0 : node.removeAttribute("contenteditable");
                 node === null || node === void 0 ? void 0 : node.classList.remove("modifiable");
+                node === null || node === void 0 ? void 0 : node.classList.remove("wrong");
                 this.matrix[i][j].reinitiate();
             }
         }
@@ -52,14 +53,14 @@ class Sudoku {
             return null;
         }
         // If we get to this specific point, then we have found a complete grid and need to quit as the for loop would reset to 0;
-        if (row == this.SIDE_LENGTH - 1 && col == this.SIDE_LENGTH - 1) {
+        if (row == constants_1.SIDE_LENGTH - 1 && col == constants_1.SIDE_LENGTH - 1) {
             matrix[row][col].setValue(possibilities[0]);
             return matrix;
         }
         // Shuffle Array of possibilities to generate multiple grids
         possibilities.sort(() => Math.random() > 0.5 ? 1 : -1);
         // ensure next does not go out of range
-        const rowsend = row + 1 > this.SIDE_LENGTH - 1 ? 0 : row + 1;
+        const rowsend = row + 1 > constants_1.SIDE_LENGTH - 1 ? 0 : row + 1;
         const colsend = this.utils.getNextSquareCol(rowsend, col);
         for (let i = 0; i < possibilities.length; i++) {
             matrix[row][col].setValue(possibilities[i]);
@@ -72,10 +73,11 @@ class Sudoku {
         matrix[row][col].setValue(null);
         return null;
     }
+    // Disgusting atm -- TODO refactor    
     addSquareListeners() {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const node = document.getElementById(`square-${i * this.SIDE_LENGTH + j}`);
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
                 if (this.matrix[i][j].isModifiable()) {
                     node === null || node === void 0 ? void 0 : node.setAttribute("contenteditable", "true");
                     node === null || node === void 0 ? void 0 : node.classList.add("modifiable");
@@ -95,11 +97,13 @@ class Sudoku {
                             node.classList.remove("selected");
                         }
                         // Buttons selectors update
-                        for (let x = 0; x < 9; x++) {
-                            const selector = document.getElementById(`btn-selector-${x}`);
-                            selector === null || selector === void 0 ? void 0 : selector.classList.remove("btn-current");
-                            if ((selector === null || selector === void 0 ? void 0 : selector.innerText) === String(e.key)) {
-                                selector.classList.add("btn-current");
+                        if (!isBackspace) {
+                            for (let x = 0; x < 9; x++) {
+                                const selector = document.getElementById(`btn-selector-${x}`);
+                                selector === null || selector === void 0 ? void 0 : selector.classList.remove("btn-current");
+                                if ((selector === null || selector === void 0 ? void 0 : selector.innerText) === String(e.key)) {
+                                    selector.classList.add("btn-current");
+                                }
                             }
                         }
                         // Verify process
@@ -115,10 +119,13 @@ class Sudoku {
         }
     }
     ;
+    erase() {
+        this.htmlHandler.erase(this.matrix);
+    }
     isCorrect(value, row, col) {
-        const firstRowIndex = row * this.SIDE_LENGTH;
+        const firstRowIndex = row * constants_1.SIDE_LENGTH;
         // Row 
-        for (let i = firstRowIndex; i < firstRowIndex + this.SIDE_LENGTH; i++) {
+        for (let i = firstRowIndex; i < firstRowIndex + constants_1.SIDE_LENGTH; i++) {
             const node = document.getElementById(`square-${i}`);
             if ((node === null || node === void 0 ? void 0 : node.innerText) === String(value))
                 return false;
@@ -130,11 +137,11 @@ class Sudoku {
                 return false;
         }
         // Sub square
-        const { min: minR, max: maxR } = this.utils.getMinMaxPos(row);
-        const { min: minC, max: maxC } = this.utils.getMinMaxPos(col);
+        const { min: minR, max: maxR } = SudokuGenetorUtils_1.SudokuGeneratorUtils.prototype.getMinMaxPos(row);
+        const { min: minC, max: maxC } = SudokuGenetorUtils_1.SudokuGeneratorUtils.prototype.getMinMaxPos(col);
         for (let x = minR; x < maxR; x++) {
             for (let y = minC; y < maxC; y++) {
-                const node = document.getElementById(`square-${x * this.SIDE_LENGTH + y}`);
+                const node = document.getElementById(`square-${x * constants_1.SIDE_LENGTH + y}`);
                 if ((node === null || node === void 0 ? void 0 : node.innerText) === String(value))
                     return false;
             }

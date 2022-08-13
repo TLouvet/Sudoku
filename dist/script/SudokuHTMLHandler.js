@@ -1,10 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
+const constants_1 = require("./constants");
 const GridNode_1 = require("./GridNode");
 class SudokuHTMLHandler {
-    constructor(SIDE_LENGTH = 9) {
-        this.SIDE_LENGTH = SIDE_LENGTH;
+    constructor() { }
+    getCurrentSelectedValue() {
+        return SudokuHTMLHandler.currentSelectedBtn;
     }
     /**
      *HTML CSS MATRIX creation -- generates only the squares, not the content
@@ -15,7 +17,7 @@ class SudokuHTMLHandler {
         if (!boardContainer) {
             throw new Error("Aucun élément n'existe avec l'id donné");
         }
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             boardContainer.appendChild(this.createLine(i));
         }
         this.setLargerBorders();
@@ -29,7 +31,7 @@ class SudokuHTMLHandler {
         const div = document.createElement("div");
         div.setAttribute('id', `line-${row}`);
         div.setAttribute("class", "line");
-        for (let col = 0; col < this.SIDE_LENGTH; col++) {
+        for (let col = 0; col < constants_1.SIDE_LENGTH; col++) {
             div.appendChild(GridNode_1.GridNode.prototype.createSingleSquare(row, col));
         }
         return div;
@@ -63,9 +65,9 @@ class SudokuHTMLHandler {
     * @param matrix - Board Matrix
     */
     putToHTML(matrix) {
-        for (let i = 0; i < this.SIDE_LENGTH; i++) {
-            for (let j = 0; j < this.SIDE_LENGTH; j++) {
-                const id = i * this.SIDE_LENGTH + j;
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                const id = i * constants_1.SIDE_LENGTH + j;
                 const node = document.getElementById(`square-${id}`);
                 if (node) {
                     node.innerText = Math.random() > 0.55 ? matrix[i][j].getValue().toString() : ""; // Quand on enlève ici il faut aussi modif la matrix du coup
@@ -78,11 +80,16 @@ class SudokuHTMLHandler {
      * If a value was selected, remove squares with highlight background
      */
     clearNodesBackground() {
+        var _a;
         for (let x = 0; x < 81; x++) {
             const node = document.getElementById(`square-${x}`);
             if (node === null || node === void 0 ? void 0 : node.classList.contains("selected"))
                 node.classList.remove("selected");
         }
+        for (let i = 0; i < 9; i++) {
+            const btn = (_a = document.getElementById(`btn-selector-${i}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("btn-current");
+        }
+        SudokuHTMLHandler.currentSelectedBtn = "";
     }
     generateSelectors() {
         const parent = document.getElementById("selectors");
@@ -98,6 +105,7 @@ class SudokuHTMLHandler {
                     (_a = document.getElementById(`btn-selector-${j}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("btn-current");
                 }
                 btn.classList.add("btn-current");
+                SudokuHTMLHandler.currentSelectedBtn = btn.innerText;
             });
             parent === null || parent === void 0 ? void 0 : parent.appendChild(btn);
         }
@@ -112,5 +120,22 @@ class SudokuHTMLHandler {
                 node.classList.add("selected");
         }
     }
+    erase(matrix) {
+        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+            const btn = document.getElementById(`btn-selector-${i}`);
+            btn === null || btn === void 0 ? void 0 : btn.classList.remove('btn-current');
+            // Effacer aussi les cases sélectionnées
+            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+                if (matrix[i][j].isModifiable()) {
+                    const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
+                    if (node) {
+                        node.innerText = "";
+                        node.classList.remove("selected", "wrong");
+                    }
+                }
+            }
+        }
+    }
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
+SudokuHTMLHandler.currentSelectedBtn = "";

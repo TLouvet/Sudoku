@@ -1,3 +1,6 @@
+import { SIDE_LENGTH } from "./constants";
+import { Sudoku } from "./Sudoku";
+import { SudokuHTMLHandler } from "./SudokuHTMLHandler";
 
 /**
  * Representation of a node
@@ -36,18 +39,21 @@ export class GridNode {
   * @param col 
   * @returns 
   */
-  createSingleSquare(row: number, col: number, SIDE_LENGTH: number = 9) {
+  createSingleSquare(row: number, col: number) {
     const square = document.createElement("div");
     square.setAttribute("id", `square-${row * SIDE_LENGTH + col}`);
     square.setAttribute("class", "square");
     // Make selector buttons change depending on selection
     square.addEventListener("click", () => {
-      for (let i = 0; i < SIDE_LENGTH; i++) {
-        const btn = document.getElementById(`btn-selector-${i}`);
-        btn?.classList.remove('btn-current');
-        if (btn?.innerText === square.innerText) {
-          btn.classList.add('btn-current');
+      if (square.innerText === '') {
+        // square is empty
+        if (!Sudoku.prototype.isCorrect(Number(SudokuHTMLHandler.currentSelectedBtn), row, col)) {
+          square.classList.add("wrong");
+        } else {
+          square.classList.remove("wrong");
         }
+
+        square.innerText = SudokuHTMLHandler.currentSelectedBtn;
       }
     })
     return square;
