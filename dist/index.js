@@ -3,21 +3,23 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
 const constants_1 = require("./script/constants");
 const Sudoku_1 = require("./script/Sudoku");
-const SudokuHTMLHandler_1 = require("./script/SudokuHTMLHandler");
-const sudoku = new Sudoku_1.Sudoku();
-bootstrap();
+const Timer_1 = require("./script/Timer");
+const sudoku = new Sudoku_1.SudokuBoard();
+const timer = new Timer_1.Timer();
+main();
+// Generate new grid
 (_a = document.getElementById("generator")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-    sudoku.clearMatrix();
-    sudoku.htmlHandler.clearNodesBackground();
-    completeBoard();
+    sudoku.onRegeneration();
+    timer.restart("timer");
 });
+// Unselect squares
 (_b = document.getElementById("removeBack")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
-    sudoku.htmlHandler.clearNodesBackground();
+    sudoku.clearBoard();
 });
+// Erase current user input for current grid but keep the grid
 (_c = document.getElementById('removeOne')) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
     var _a;
     sudoku.erase();
-    SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn = "";
     // remove btns selection
     for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
         (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("selected");
@@ -26,30 +28,19 @@ bootstrap();
 /**
  * Starter, creating the base HTML
  */
-function bootstrap() {
-    sudoku.htmlHandler.createBoard("sudoku-section");
-    completeBoard();
+function main() {
+    sudoku.onFirstCreation('sudoku-section');
     listen();
-    sudoku.htmlHandler.generateSelectors();
+    timer.start("timer");
 }
-/**
- * Places matrix values into HTML Nodes
- */
-function completeBoard() {
-    sudoku.fill(sudoku.getMatrix(), 0, 0);
-    sudoku.htmlHandler.putToHTML(sudoku.getMatrix());
-    sudoku.addSquareListeners();
-}
+// Doit être déplacée dans SudokuHTMLHandlers
 function listen() {
-    for (let i = 0; i < 81; i++) {
-        const square = document.getElementById(`square-${i}`);
-        if (!square) {
-            continue;
-        }
-        square.addEventListener("click", (e) => {
+    for (let i = 0; i < 81; i++) { // Pour chaque noeud
+        const square = document.getElementById(`square-${i}`); // Je trouve le oneud
+        square === null || square === void 0 ? void 0 : square.addEventListener("click", (e) => {
             var _a;
-            const value = (_a = e.target) === null || _a === void 0 ? void 0 : _a.innerText;
-            // Reinit nodes
+            const value = (_a = e.target) === null || _a === void 0 ? void 0 : _a.innerText; // Je recup la valeur du noeud
+            // je mets chaque noeud en blank puis je remets en selected. Sans un systeme de liste on ne fera pas mieux 
             for (let x = 0; x < 81; x++) {
                 const node = document.getElementById(`square-${x}`);
                 node === null || node === void 0 ? void 0 : node.classList.remove("selected"); // Make it blank

@@ -1,5 +1,10 @@
-import { SIDE_LENGTH } from "./constants";
-import { GridNode } from "./GridNode";
+/**
+ * SudokuGeneratorUtils.ts
+ * Collection of utility functions used while generating the sudoku matrix
+ */
+
+import { GridNode } from "../GridNode";
+import { SIDE_LENGTH } from "../constants";
 
 export class SudokuGeneratorUtils {
 
@@ -31,7 +36,6 @@ export class SudokuGeneratorUtils {
     if (col + 1 > SIDE_LENGTH - 1) return 0;
     return col + 1;
   }
-
 
   /** sudoku line validation */
   keepNonCommonOnLine(possibles: number[], line: GridNode[]) {
@@ -65,7 +69,6 @@ export class SudokuGeneratorUtils {
 
     return possibilities.filter(e => !arr.includes(e));
   }
-
 
   /**
  * Find which indexes will be checked when verifying a sudoku sub-square
