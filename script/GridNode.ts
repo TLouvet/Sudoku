@@ -1,6 +1,6 @@
 import { SIDE_LENGTH } from "./constants";
-import { Sudoku } from "./Sudoku";
-import { SudokuHTMLHandler } from "./SudokuHTMLHandler";
+import { DigitSelectors } from "./DigitSelectors";
+import { SudokuValidator } from "./Sudoku/SudokuValidator";
 
 /**
  * Representation of a node
@@ -39,21 +39,19 @@ export class GridNode {
   * @param col 
   * @returns 
   */
-  createSingleSquare(row: number, col: number) {
+  createSingleSquare(row: number, col: number, digits: DigitSelectors) {
     const square = document.createElement("div");
     square.setAttribute("id", `square-${row * SIDE_LENGTH + col}`);
     square.setAttribute("class", "square");
-    // Make selector buttons change depending on selection
     square.addEventListener("click", () => {
       if (square.innerText === '') {
-        // square is empty
-        if (!Sudoku.prototype.isCorrect(Number(SudokuHTMLHandler.currentSelectedBtn), row, col)) {
+        const currentSelectedValue = digits.getCurrentSelectedID() + 1;
+        if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col)) {
           square.classList.add("wrong");
-        } else {
-          square.classList.remove("wrong");
         }
 
-        square.innerText = SudokuHTMLHandler.currentSelectedBtn;
+        const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
+        square.innerText = valueToEnter;
       }
     })
     return square;

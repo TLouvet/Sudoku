@@ -2,8 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
 const constants_1 = require("./constants");
-const Sudoku_1 = require("./Sudoku");
-const SudokuHTMLHandler_1 = require("./SudokuHTMLHandler");
+const SudokuValidator_1 = require("./Sudoku/SudokuValidator");
 /**
  * Representation of a node
  */
@@ -37,21 +36,18 @@ class GridNode {
     * @param col
     * @returns
     */
-    createSingleSquare(row, col) {
+    createSingleSquare(row, col, digits) {
         const square = document.createElement("div");
         square.setAttribute("id", `square-${row * constants_1.SIDE_LENGTH + col}`);
         square.setAttribute("class", "square");
-        // Make selector buttons change depending on selection
         square.addEventListener("click", () => {
             if (square.innerText === '') {
-                // square is empty
-                if (!Sudoku_1.Sudoku.prototype.isCorrect(Number(SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn), row, col)) {
+                const currentSelectedValue = digits.getCurrentSelectedID() + 1;
+                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col)) {
                     square.classList.add("wrong");
                 }
-                else {
-                    square.classList.remove("wrong");
-                }
-                square.innerText = SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn;
+                const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
+                square.innerText = valueToEnter;
             }
         });
         return square;
