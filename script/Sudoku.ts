@@ -79,6 +79,7 @@ export class Sudoku {
     return null;
   }
 
+  // Disgusting atm -- TODO refactor
   addSquareListeners() {
     for (let i = 0; i < this.SIDE_LENGTH; i++) {
       for (let j = 0; j < this.SIDE_LENGTH; j++) {
