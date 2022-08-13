@@ -1,7 +1,9 @@
 "use strict";
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
+const constants_1 = require("./script/constants");
 const Sudoku_1 = require("./script/Sudoku");
+const SudokuHTMLHandler_1 = require("./script/SudokuHTMLHandler");
 const sudoku = new Sudoku_1.Sudoku();
 bootstrap();
 (_a = document.getElementById("generator")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
@@ -11,6 +13,15 @@ bootstrap();
 });
 (_b = document.getElementById("removeBack")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
     sudoku.htmlHandler.clearNodesBackground();
+});
+(_c = document.getElementById('removeOne')) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
+    var _a;
+    sudoku.erase();
+    SudokuHTMLHandler_1.SudokuHTMLHandler.currentSelectedBtn = "";
+    // remove btns selection
+    for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
+        (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("selected");
+    }
 });
 /**
  * Starter, creating the base HTML
