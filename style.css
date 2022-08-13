@@ -1,0 +1,69 @@
+body {
+  text-align: center;
+}
+
+.line {
+  display: flex;
+  justify-content: center;
+}
+
+.square {
+  width: 28px;
+  height: 28px;
+  border: 1px solid black;
+  text-align: center;
+  line-height: 28px;
+  cursor: pointer;
+}
+
+.wrong {
+  background-color: red !important;
+}
+
+
+.top {
+  border-top: 3px solid black;
+}
+
+.bot {
+  border-bottom: 3px solid black;
+}
+
+.left {
+  border-left: 3px solid black;
+}
+
+.right {
+  border-right: 3px solid black;
+}
+
+.selected {
+  background-color: rgb(88, 172, 228) !important;
+}
+
+.modifiable {
+  background-color: beige;
+}
+
+.ml-10 {
+  margin-left: 10px;
+}
+
+.btn {
+  background-color: rgb(90, 170, 230);
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-weight: 600;
+  color: white;
+  margin-top: 50px;
+  border: none;
+  cursor: pointer;
+  border: 1px solid rgb(90, 170, 230);
+}
+
+.btn:hover,
+.btn-current {
+  background-color: transparent;
+  color: rgb(90, 170, 230);
+  border: 1px solid rgb(90, 170, 230);
+}
