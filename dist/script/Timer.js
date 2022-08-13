@@ -14,8 +14,7 @@ class Timer {
      */
     start(htmlId) {
         this.intervalID = window.setInterval(() => {
-            this.seconds++;
-            if (this.seconds == 60) {
+            if (++this.seconds == 60) {
                 this.minutes++;
                 this.seconds = 0;
             }

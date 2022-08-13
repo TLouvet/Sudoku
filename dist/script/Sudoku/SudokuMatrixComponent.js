@@ -8,21 +8,9 @@ const SudokuGeneratorUtils_1 = require("./SudokuGeneratorUtils");
  * Representation of the code matrix used to generate the grid
  */
 class SudokuMatrixComponent {
-    constructor(matrix = []) {
-        this.matrix = matrix;
-        this.initiate();
-    }
-    /**
-     * Initial matrix fill
-     */
-    initiate() {
-        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
-            const arr = [];
-            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
-                arr.push(new GridNode_1.GridNode());
-            }
-            this.matrix.push(arr);
-        }
+    constructor() {
+        this.matrix = [];
+        this.matrix = Array(constants_1.SIDE_LENGTH).fill(0).map(() => Array(constants_1.SIDE_LENGTH).fill(0).map(() => new GridNode_1.GridNode()));
     }
     /**
      * get the sudoku matrix
@@ -48,7 +36,7 @@ class SudokuMatrixComponent {
             return null;
         }
         // If we get to this specific point, then we have found a complete grid and need to quit as the for loop would reset to 0;
-        if (row == constants_1.SIDE_LENGTH - 1 && col == constants_1.SIDE_LENGTH - 1) {
+        if (this.isComplete(row, col)) {
             matrix[row][col].setValue(possibilities[0]);
             return matrix;
         }
@@ -77,6 +65,9 @@ class SudokuMatrixComponent {
                 this.matrix[i][j].reinitiate();
             }
         }
+    }
+    isComplete(row, col) {
+        return row == constants_1.SIDE_LENGTH - 1 && col == constants_1.SIDE_LENGTH - 1;
     }
 }
 exports.SudokuMatrixComponent = SudokuMatrixComponent;

@@ -2,9 +2,7 @@ export class Timer {
   private seconds = 0;
   private minutes = 0;
   private hours = 0;
-  private intervalID: number = 0;
-
-  constructor() { }
+  private intervalID = 0;
 
   /**
    * Start Timer
@@ -12,8 +10,7 @@ export class Timer {
    */
   start(htmlId: string) {
     this.intervalID = window.setInterval(() => {
-      this.seconds++;
-      if (this.seconds == 60) {
+      if (++this.seconds == 60) {
         this.minutes++;
         this.seconds = 0;
       }
@@ -24,7 +21,6 @@ export class Timer {
       }
 
       const lambdaFormat = (arg: number) => arg < 10 ? `0${arg}` : arg;
-
       const hformat = lambdaFormat(this.hours);
       const mformat = lambdaFormat(this.minutes);
       const sformat = lambdaFormat(this.seconds);

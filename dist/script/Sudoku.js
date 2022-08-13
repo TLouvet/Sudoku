@@ -26,6 +26,7 @@ class SudokuBoard {
         this.matrix.startFillProcess();
         this.htmlHandler.putToHTML(this.matrix.getMatrix());
         this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+        this.htmlHandler.highlightSquaresOnClick();
     }
     /**
      * User asking to get a new grid
@@ -37,6 +38,7 @@ class SudokuBoard {
         this.matrix.startFillProcess();
         this.htmlHandler.putToHTML(this.matrix.getMatrix());
         this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+        this.htmlHandler.removeWinMessage();
     }
     /**
      * Erase user-values entered for current Grid
@@ -44,6 +46,7 @@ class SudokuBoard {
     erase() {
         this.digits.unselect();
         this.htmlHandler.setCurrentSelectedValue("");
+        this.htmlHandler.clearNodesBackground();
         this.htmlHandler.eraseUserInputOnCurrentGrid(this.matrix.getMatrix());
     }
     /**

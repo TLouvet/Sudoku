@@ -54,9 +54,10 @@ export class SudokuHTMLHandler {
    * If a value was selected, remove squares with highlight background
    */
   clearNodesBackground() {
-    for (let x = 0; x < 81; x++) {
+    for (let x = 0; x < SIDE_LENGTH * SIDE_LENGTH; x++) {
       document.getElementById(`square-${x}`)?.classList.remove("selected");
     }
+
     this.currentSelectedBtn = "";
   }
 
@@ -69,13 +70,14 @@ export class SudokuHTMLHandler {
           node?.setAttribute("contenteditable", "true");
           node?.classList.add("modifiable");
           node?.addEventListener("keydown", (e) => {
+            e.preventDefault();
             const isBackspace = e.key === "Backspace"
+            const current = i * SIDE_LENGTH + j;
             if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
-              e.preventDefault();
               return;
             }
             // Overwrite & highlight
-            node.innerText = "";
+            node.innerText = e.key !== "Backspace" ? e.key : "";
             this.highlight(Number(e.key));
 
             if (!isBackspace) {
@@ -85,17 +87,52 @@ export class SudokuHTMLHandler {
             }
 
             // Verify process
-            if (!isBackspace && !SudokuValidator.prototype.isCorrect(Number(e.key), i, j)) {
+            if (!isBackspace && !SudokuValidator.prototype.isCorrect(Number(e.key), i, j, current)) {
               node.classList.add("wrong");
             } else {
               node.classList.remove("wrong");
             }
 
+            // Recompute all false values
+
+            // Is this the end?
+            if (SudokuValidator.prototype.isGridEnd()) {
+              this.removeNodeModificationOnWin();
+              this.displayWinMessage();
+            }
           })
         }
       }
     }
   };
+
+  removeNodeModificationOnWin() {
+    for (let i = 0; i < SIDE_LENGTH * SIDE_LENGTH; i++) {
+      document.getElementById(`square-${i}`)?.removeAttribute("contenteditable");
+    }
+  }
+
+  displayWinMessage() {
+    const node = document.getElementById("end");
+    if (node) node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";
+  }
+
+  removeWinMessage() {
+    document.getElementById("end")!.innerHTML = "";
+  }
+
+  /**
+   * Ability to highlight onclick
+   */
+  highlightSquaresOnClick() {
+    for (let i = 0; i < 81; i++) {
+      const square = document.getElementById(`square-${i}`)
+      square?.addEventListener("click", (e) => {
+        const value = Number((e as any).target?.innerText);
+        this.highlight(value);
+      })
+    }
+  }
 
   /**
    * Show squares holding given value
@@ -124,13 +161,7 @@ export class SudokuHTMLHandler {
     }
   }
 
-  private eraseOneNodeInput(id: string) {
-    const node = document.getElementById(id);
-    if (node) {
-      node.innerText = "";
-      node.classList.remove("selected", "wrong")
-    }
-  }
+
 
   /**
    * delete modifiable squares related CSS and conteneditable property
@@ -142,6 +173,18 @@ export class SudokuHTMLHandler {
         node?.removeAttribute("contenteditable");
         node?.classList.remove("modifiable", "wrong");
       }
+    }
+  }
+
+  /**
+   * Node erase user input
+   * @param id 
+   */
+  private eraseOneNodeInput(id: string) {
+    const node = document.getElementById(id);
+    if (node) {
+      node.innerText = "";
+      node.classList.remove("selected", "wrong")
     }
   }
 

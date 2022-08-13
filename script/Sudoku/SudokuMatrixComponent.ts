@@ -7,21 +7,10 @@ import { SudokuGeneratorUtils } from "./SudokuGeneratorUtils";
  */
 export class SudokuMatrixComponent {
 
-  constructor(private matrix: GridNode[][] = []) {
-    this.initiate();
-  }
+  private matrix: GridNode[][] = [];
 
-  /**
-   * Initial matrix fill
-   */
-  private initiate() {
-    for (let i = 0; i < SIDE_LENGTH; i++) {
-      const arr = [];
-      for (let j = 0; j < SIDE_LENGTH; j++) {
-        arr.push(new GridNode());
-      }
-      this.matrix.push(arr);
-    }
+  constructor() {
+    this.matrix = Array(SIDE_LENGTH).fill(0).map(() => Array(SIDE_LENGTH).fill(0).map(() => new GridNode()));
   }
 
   /**
@@ -51,7 +40,7 @@ export class SudokuMatrixComponent {
     }
 
     // If we get to this specific point, then we have found a complete grid and need to quit as the for loop would reset to 0;
-    if (row == SIDE_LENGTH - 1 && col == SIDE_LENGTH - 1) {
+    if (this.isComplete(row, col)) {
       matrix[row][col].setValue(possibilities[0]);
       return matrix;
     }
@@ -84,5 +73,9 @@ export class SudokuMatrixComponent {
         this.matrix[i][j].reinitiate();
       }
     }
+  }
+
+  private isComplete(row: number, col: number) {
+    return row == SIDE_LENGTH - 1 && col == SIDE_LENGTH - 1;
   }
 }

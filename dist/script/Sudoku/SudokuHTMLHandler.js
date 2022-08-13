@@ -49,7 +49,7 @@ class SudokuHTMLHandler {
      */
     clearNodesBackground() {
         var _a;
-        for (let x = 0; x < 81; x++) {
+        for (let x = 0; x < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; x++) {
             (_a = document.getElementById(`square-${x}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("selected");
         }
         this.currentSelectedBtn = "";
@@ -63,13 +63,14 @@ class SudokuHTMLHandler {
                     node === null || node === void 0 ? void 0 : node.setAttribute("contenteditable", "true");
                     node === null || node === void 0 ? void 0 : node.classList.add("modifiable");
                     node === null || node === void 0 ? void 0 : node.addEventListener("keydown", (e) => {
+                        e.preventDefault();
                         const isBackspace = e.key === "Backspace";
+                        const current = i * constants_1.SIDE_LENGTH + j;
                         if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
-                            e.preventDefault();
                             return;
                         }
                         // Overwrite & highlight
-                        node.innerText = "";
+                        node.innerText = e.key !== "Backspace" ? e.key : "";
                         this.highlight(Number(e.key));
                         if (!isBackspace) {
                             node.classList.add("selected");
@@ -78,11 +79,17 @@ class SudokuHTMLHandler {
                             node.classList.remove("selected");
                         }
                         // Verify process
-                        if (!isBackspace && !SudokuValidator_1.SudokuValidator.prototype.isCorrect(Number(e.key), i, j)) {
+                        if (!isBackspace && !SudokuValidator_1.SudokuValidator.prototype.isCorrect(Number(e.key), i, j, current)) {
                             node.classList.add("wrong");
                         }
                         else {
                             node.classList.remove("wrong");
+                        }
+                        // Recompute all false values
+                        // Is this the end?
+                        if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
+                            this.removeNodeModificationOnWin();
+                            this.displayWinMessage();
                         }
                     });
                 }
@@ -90,6 +97,33 @@ class SudokuHTMLHandler {
         }
     }
     ;
+    removeNodeModificationOnWin() {
+        var _a;
+        for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
+            (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.removeAttribute("contenteditable");
+        }
+    }
+    displayWinMessage() {
+        const node = document.getElementById("end");
+        if (node)
+            node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";
+    }
+    removeWinMessage() {
+        document.getElementById("end").innerHTML = "";
+    }
+    /**
+     * Ability to highlight onclick
+     */
+    highlightSquaresOnClick() {
+        for (let i = 0; i < 81; i++) {
+            const square = document.getElementById(`square-${i}`);
+            square === null || square === void 0 ? void 0 : square.addEventListener("click", (e) => {
+                var _a;
+                const value = Number((_a = e.target) === null || _a === void 0 ? void 0 : _a.innerText);
+                this.highlight(value);
+            });
+        }
+    }
     /**
      * Show squares holding given value
      * @param value
@@ -116,13 +150,6 @@ class SudokuHTMLHandler {
             }
         }
     }
-    eraseOneNodeInput(id) {
-        const node = document.getElementById(id);
-        if (node) {
-            node.innerText = "";
-            node.classList.remove("selected", "wrong");
-        }
-    }
     /**
      * delete modifiable squares related CSS and conteneditable property
      */
@@ -133,6 +160,17 @@ class SudokuHTMLHandler {
                 node === null || node === void 0 ? void 0 : node.removeAttribute("contenteditable");
                 node === null || node === void 0 ? void 0 : node.classList.remove("modifiable", "wrong");
             }
+        }
+    }
+    /**
+     * Node erase user input
+     * @param id
+     */
+    eraseOneNodeInput(id) {
+        const node = document.getElementById(id);
+        if (node) {
+            node.innerText = "";
+            node.classList.remove("selected", "wrong");
         }
     }
     /**
