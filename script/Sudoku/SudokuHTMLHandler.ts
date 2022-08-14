@@ -1,6 +1,7 @@
 import { SIDE_LENGTH } from "../constants";
 import { DigitSelectors } from "../DigitSelectors";
 import { GridNode } from "../GridNode";
+import { Timer } from "../Timer";
 import { SudokuValidator } from "./SudokuValidator";
 
 export class SudokuHTMLHandler {
@@ -54,10 +55,7 @@ export class SudokuHTMLHandler {
    * If a value was selected, remove squares with highlight background
    */
   clearNodesBackground() {
-    for (let x = 0; x < SIDE_LENGTH * SIDE_LENGTH; x++) {
-      document.getElementById(`square-${x}`)?.classList.remove("selected");
-    }
-
+    document.querySelectorAll('.selected').forEach(e => e.classList.remove("selected"));
     this.currentSelectedBtn = "";
   }
 
@@ -73,6 +71,7 @@ export class SudokuHTMLHandler {
             e.preventDefault();
             const isBackspace = e.key === "Backspace"
             const current = i * SIDE_LENGTH + j;
+            // Valid entry
             if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
               return;
             }
@@ -107,12 +106,11 @@ export class SudokuHTMLHandler {
   };
 
   removeNodeModificationOnWin() {
-    for (let i = 0; i < SIDE_LENGTH * SIDE_LENGTH; i++) {
-      document.getElementById(`square-${i}`)?.removeAttribute("contenteditable");
-    }
+    document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
   }
 
   displayWinMessage() {
+    Timer.stop();
     const node = document.getElementById("end");
     if (node) node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";
   }
@@ -125,13 +123,10 @@ export class SudokuHTMLHandler {
    * Ability to highlight onclick
    */
   highlightSquaresOnClick() {
-    for (let i = 0; i < 81; i++) {
-      const square = document.getElementById(`square-${i}`)
-      square?.addEventListener("click", (e) => {
-        const value = Number((e as any).target?.innerText);
-        this.highlight(value);
-      })
-    }
+    document.querySelectorAll('[id^="square-"]')?.forEach(e => e.addEventListener("click", (evt) => {
+      const value = Number((evt as any).target?.innerText);
+      this.highlight(value);
+    }));
   }
 
   /**
@@ -139,53 +134,35 @@ export class SudokuHTMLHandler {
    * @param value 
    */
   highlight(value: number) {
-    for (let i = 0; i < 81; i++) {
-      const node = document.getElementById(`square-${i}`)
-      const val = Number(node?.innerText);
-      node?.classList.remove("selected");
-      if (node?.innerText && val === value) node.classList.add("selected");
-    }
+    document.querySelectorAll('.selected')?.forEach(n => n.classList.remove("selected"));
+    document.querySelectorAll('[id^="square-"]')?.forEach(e => {
+      const val = Number((e as HTMLElement).innerText);
+      if (val && val === value) {
+        e.classList.add("selected");
+      }
+    })
   }
 
   /**
    * Erase user inputs on current grid
    * @param matrix 
    */
-  eraseUserInputOnCurrentGrid(matrix: GridNode[][]) {
-    for (let i = 0; i < SIDE_LENGTH; i++) {
-      for (let j = 0; j < SIDE_LENGTH; j++) {
-        if (matrix[i][j].isModifiable()) {
-          this.eraseOneNodeInput(`square-${i * SIDE_LENGTH + j}`);
-        }
-      }
-    }
-  }
-
-
-
-  /**
-   * delete modifiable squares related CSS and conteneditable property
-   */
-  onNewGenerationClear() {
-    for (let i = 0; i < SIDE_LENGTH; i++) {
-      for (let j = 0; j < SIDE_LENGTH; j++) {
-        const node = document.getElementById(`square-${i * SIDE_LENGTH + j}`);
-        node?.removeAttribute("contenteditable");
-        node?.classList.remove("modifiable", "wrong");
-      }
-    }
+  eraseUserInputOnCurrentGrid() {
+    document.querySelectorAll('[contenteditable="true"]')?.forEach(node => {
+      node.classList.remove("selected", "wrong");
+      (node as HTMLElement).innerText = "";
+    })
   }
 
   /**
-   * Node erase user input
-   * @param id 
+   * delete modifiable squares related CSS and conteneditable property in order to regenerate grid
    */
-  private eraseOneNodeInput(id: string) {
-    const node = document.getElementById(id);
-    if (node) {
-      node.innerText = "";
-      node.classList.remove("selected", "wrong")
-    }
+  eraseModifiableInput() {
+    document.querySelectorAll('[contenteditable="true"]')?.forEach(node => {
+      node.removeAttribute("contenteditable");
+      node.classList.remove("modifiable", "wrong");
+      (node as HTMLElement).innerText = "";
+    })
   }
 
   /**

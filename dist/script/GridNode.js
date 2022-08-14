@@ -49,7 +49,7 @@ class GridNode {
                 if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * constants_1.SIDE_LENGTH + col)) {
                     square.classList.add("wrong");
                 }
-                // Recompoute false values
+                // Recompute false values
                 // End ?
                 if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
                     SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.removeNodeModificationOnWin();

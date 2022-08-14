@@ -2,15 +2,16 @@
 "use strict";
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", { value: true });
+const SudokuHTMLHandlers_1 = require("./script/PerfTest/SudokuHTMLHandlers");
 const Sudoku_1 = require("./script/Sudoku");
 const Timer_1 = require("./script/Timer");
 const sudoku = new Sudoku_1.SudokuBoard();
-const timer = new Timer_1.Timer();
+let debug = false;
 main();
 // Generate new grid
 (_a = document.getElementById("generator")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
     sudoku.onRegeneration();
-    timer.restart("timer");
+    Timer_1.Timer.restart("timer");
 });
 // Unselect squares
 (_b = document.getElementById("removeBack")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
@@ -25,14 +26,18 @@ main();
  */
 function main() {
     sudoku.onFirstCreation('sudoku-section');
-    timer.start("timer");
+    Timer_1.Timer.start("timer");
 }
 // TODO =>
 // 1) corriger bug où les valeurs ne sont pas recalculées => A chaque changement de valeur dans la grille, il faut recalculer les valeurs qui sont fausses
 // 2) Victoire => Stoper le timer
 // 3) Cosmétique: faire disparaitre les chiffres boutons lorsque 9 exemplaires existent
+// TESTS 
+if (debug) {
+    (0, SudokuHTMLHandlers_1.startSudokuHTMLHandlePerfTest)();
+}
 
-},{"./script/Sudoku":4,"./script/Timer":10}],2:[function(require,module,exports){
+},{"./script/PerfTest/SudokuHTMLHandlers":4,"./script/Sudoku":5,"./script/Timer":11}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DigitSelectors = void 0;
@@ -86,7 +91,7 @@ class DigitSelectors {
 }
 exports.DigitSelectors = DigitSelectors;
 
-},{"./SudokuHTMLHandler":5}],3:[function(require,module,exports){
+},{"./SudokuHTMLHandler":6}],3:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
@@ -138,7 +143,7 @@ class GridNode {
                 if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * constants_1.SIDE_LENGTH + col)) {
                     square.classList.add("wrong");
                 }
-                // Recompoute false values
+                // Recompute false values
                 // End ?
                 if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
                     SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
@@ -151,7 +156,98 @@ class GridNode {
 }
 exports.GridNode = GridNode;
 
-},{"./Sudoku/SudokuHTMLHandler":7,"./Sudoku/SudokuValidator":9,"./constants":11}],4:[function(require,module,exports){
+},{"./Sudoku/SudokuHTMLHandler":8,"./Sudoku/SudokuValidator":10,"./constants":12}],4:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.startSudokuHTMLHandlePerfTest = void 0;
+const constants_1 = require("../constants");
+const test_1 = require("../test");
+////////// Remove node modification
+// 20ms -- 10k tries Faster
+function removeNodeModificationOnWinQS() {
+    var _a;
+    (_a = document.querySelectorAll("[contenteditable='true']")) === null || _a === void 0 ? void 0 : _a.forEach(e => e.removeAttribute("contenteditable"));
+}
+// 80ms -- 10k tries Slower
+function removeNodeModificationOnWinWholeLoop() {
+    var _a;
+    for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
+        (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.removeAttribute("contenteditable");
+    }
+}
+/////////// HighlightSquares
+// 2650ms for 1k iter -- SLOW
+function highlightSquaresOnClickLoop() {
+    for (let i = 0; i < 81; i++) {
+        const square = document.getElementById(`square-${i}`);
+        square === null || square === void 0 ? void 0 : square.addEventListener("click", (e) => {
+            var _a;
+            const value = Number((_a = e.target) === null || _a === void 0 ? void 0 : _a.innerText);
+            highlightQS(value);
+            //highlightLoop(value);
+        });
+    }
+}
+// 500ms for 1k iter -- Faster
+function highlightSquaresOnClickQS() {
+    var _a;
+    (_a = document.querySelectorAll('[id^="square-"]')) === null || _a === void 0 ? void 0 : _a.forEach(e => e.addEventListener("click", (evt) => {
+        var _a;
+        const value = Number((_a = evt.target) === null || _a === void 0 ? void 0 : _a.innerText);
+        //highlightQS(value);
+        highlightLoop(value);
+    }));
+}
+////// Highlight function -- both have same speed given that both highlight caller perform the same with each.
+function highlightQS(value) {
+    var _a, _b;
+    (_a = document.querySelectorAll('.selected')) === null || _a === void 0 ? void 0 : _a.forEach(n => n.classList.remove("selected"));
+    (_b = document.querySelectorAll('[id^="square-"]')) === null || _b === void 0 ? void 0 : _b.forEach(e => {
+        const val = Number(e.innerText);
+        if (val && val === value) {
+            e.classList.add("selected");
+        }
+    });
+}
+function highlightLoop(value) {
+    for (let i = 0; i < 81; i++) {
+        const node = document.getElementById(`square-${i}`);
+        const val = Number(node === null || node === void 0 ? void 0 : node.innerText);
+        node === null || node === void 0 ? void 0 : node.classList.remove("selected");
+        if ((node === null || node === void 0 ? void 0 : node.innerText) && val === value)
+            node.classList.add("selected");
+    }
+}
+//// Board Regeneration
+//50ms - 1k 
+function onNewGenerationClearLoop() {
+    for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+        for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+            const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
+            node === null || node === void 0 ? void 0 : node.removeAttribute("contenteditable");
+            node === null || node === void 0 ? void 0 : node.classList.remove("modifiable", "wrong");
+        }
+    }
+}
+// 2ms - 1k
+function onNewGenerationClearQS() {
+    var _a;
+    (_a = document.querySelectorAll('[contenteditable="true]')) === null || _a === void 0 ? void 0 : _a.forEach(node => {
+        node.removeAttribute("contenteditable");
+        node.classList.remove("modifiable", "wrong");
+    });
+}
+function startSudokuHTMLHandlePerfTest() {
+    console.log(`Remove Node Modification with HTML List of contenteditable: ${(0, test_1.testPerformance)(removeNodeModificationOnWinQS)} milliseconds on 10k iterations`);
+    console.log(`Remove Node Modification with for loop on every square: ${(0, test_1.testPerformance)(removeNodeModificationOnWinWholeLoop)} milliseconds on 10k iterations`);
+    console.log(`Testing Highlight caller function - HTML LIST: ${(0, test_1.testPerformance)(highlightSquaresOnClickLoop, 1000)}ms on 1k iterations`);
+    console.log(`Testing Highlight caller function - Loop: ${(0, test_1.testPerformance)(highlightSquaresOnClickQS, 1000)}ms on 1k iterations`);
+    console.log(`Testing remove modifiable inputs - HTML LIST: ${(0, test_1.testPerformance)(onNewGenerationClearQS, 1000)}ms on 1k iterations`);
+    console.log(`Testing remove modifiable inputs - Loop: ${(0, test_1.testPerformance)(onNewGenerationClearLoop, 1000)}ms on 1k iterations`);
+}
+exports.startSudokuHTMLHandlePerfTest = startSudokuHTMLHandlePerfTest;
+
+},{"../constants":12,"../test":13}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuBoard = void 0;
@@ -187,7 +283,7 @@ class SudokuBoard {
      */
     onRegeneration() {
         this.matrix.clear();
-        this.htmlHandler.onNewGenerationClear();
+        this.htmlHandler.eraseModifiableInput();
         this.clearBoard();
         this.matrix.startFillProcess();
         this.htmlHandler.putToHTML(this.matrix.getMatrix());
@@ -201,7 +297,7 @@ class SudokuBoard {
         this.digits.unselect();
         this.htmlHandler.setCurrentSelectedValue("");
         this.htmlHandler.clearNodesBackground();
-        this.htmlHandler.eraseUserInputOnCurrentGrid(this.matrix.getMatrix());
+        this.htmlHandler.eraseUserInputOnCurrentGrid();
     }
     /**
      * Remove any square selection
@@ -214,7 +310,7 @@ class SudokuBoard {
 }
 exports.SudokuBoard = SudokuBoard;
 
-},{"./DigitSelectors":2,"./Sudoku/SudokuHTMLHandler":7,"./Sudoku/SudokuMatrixComponent":8}],5:[function(require,module,exports){
+},{"./DigitSelectors":2,"./Sudoku/SudokuHTMLHandler":8,"./Sudoku/SudokuMatrixComponent":9}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
@@ -334,7 +430,7 @@ class SudokuHTMLHandler {
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
 
-},{"./GridNode":3,"./constants":11}],6:[function(require,module,exports){
+},{"./GridNode":3,"./constants":12}],7:[function(require,module,exports){
 "use strict";
 /**
  * SudokuGeneratorUtils.ts
@@ -423,12 +519,13 @@ class SudokuGeneratorUtils {
 }
 exports.SudokuGeneratorUtils = SudokuGeneratorUtils;
 
-},{"../constants":11}],7:[function(require,module,exports){
+},{"../constants":12}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
 const constants_1 = require("../constants");
 const GridNode_1 = require("../GridNode");
+const Timer_1 = require("../Timer");
 const SudokuValidator_1 = require("./SudokuValidator");
 class SudokuHTMLHandler {
     constructor() {
@@ -474,10 +571,7 @@ class SudokuHTMLHandler {
      * If a value was selected, remove squares with highlight background
      */
     clearNodesBackground() {
-        var _a;
-        for (let x = 0; x < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; x++) {
-            (_a = document.getElementById(`square-${x}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("selected");
-        }
+        document.querySelectorAll('.selected').forEach(e => e.classList.remove("selected"));
         this.currentSelectedBtn = "";
     }
     // Disgusting atm -- TODO refactor    
@@ -492,6 +586,7 @@ class SudokuHTMLHandler {
                         e.preventDefault();
                         const isBackspace = e.key === "Backspace";
                         const current = i * constants_1.SIDE_LENGTH + j;
+                        // Valid entry
                         if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
                             return;
                         }
@@ -524,12 +619,10 @@ class SudokuHTMLHandler {
     }
     ;
     removeNodeModificationOnWin() {
-        var _a;
-        for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
-            (_a = document.getElementById(`square-${i}`)) === null || _a === void 0 ? void 0 : _a.removeAttribute("contenteditable");
-        }
+        document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
     }
     displayWinMessage() {
+        Timer_1.Timer.stop();
         const node = document.getElementById("end");
         if (node)
             node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";
@@ -541,52 +634,48 @@ class SudokuHTMLHandler {
      * Ability to highlight onclick
      */
     highlightSquaresOnClick() {
-        for (let i = 0; i < 81; i++) {
-            const square = document.getElementById(`square-${i}`);
-            square === null || square === void 0 ? void 0 : square.addEventListener("click", (e) => {
-                var _a;
-                const value = Number((_a = e.target) === null || _a === void 0 ? void 0 : _a.innerText);
-                this.highlight(value);
-            });
-        }
+        var _a;
+        (_a = document.querySelectorAll('[id^="square-"]')) === null || _a === void 0 ? void 0 : _a.forEach(e => e.addEventListener("click", (evt) => {
+            var _a;
+            const value = Number((_a = evt.target) === null || _a === void 0 ? void 0 : _a.innerText);
+            this.highlight(value);
+        }));
     }
     /**
      * Show squares holding given value
      * @param value
      */
     highlight(value) {
-        for (let i = 0; i < 81; i++) {
-            const node = document.getElementById(`square-${i}`);
-            const val = Number(node === null || node === void 0 ? void 0 : node.innerText);
-            node === null || node === void 0 ? void 0 : node.classList.remove("selected");
-            if ((node === null || node === void 0 ? void 0 : node.innerText) && val === value)
-                node.classList.add("selected");
-        }
+        var _a, _b;
+        (_a = document.querySelectorAll('.selected')) === null || _a === void 0 ? void 0 : _a.forEach(n => n.classList.remove("selected"));
+        (_b = document.querySelectorAll('[id^="square-"]')) === null || _b === void 0 ? void 0 : _b.forEach(e => {
+            const val = Number(e.innerText);
+            if (val && val === value) {
+                e.classList.add("selected");
+            }
+        });
     }
     /**
      * Erase user inputs on current grid
      * @param matrix
      */
-    eraseUserInputOnCurrentGrid(matrix) {
-        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
-            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
-                if (matrix[i][j].isModifiable()) {
-                    this.eraseOneNodeInput(`square-${i * constants_1.SIDE_LENGTH + j}`);
-                }
-            }
-        }
+    eraseUserInputOnCurrentGrid() {
+        var _a;
+        (_a = document.querySelectorAll('[contenteditable="true"]')) === null || _a === void 0 ? void 0 : _a.forEach(node => {
+            node.classList.remove("selected", "wrong");
+            node.innerText = "";
+        });
     }
     /**
-     * delete modifiable squares related CSS and conteneditable property
+     * delete modifiable squares related CSS and conteneditable property in order to regenerate grid
      */
-    onNewGenerationClear() {
-        for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
-            for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
-                const node = document.getElementById(`square-${i * constants_1.SIDE_LENGTH + j}`);
-                node === null || node === void 0 ? void 0 : node.removeAttribute("contenteditable");
-                node === null || node === void 0 ? void 0 : node.classList.remove("modifiable", "wrong");
-            }
-        }
+    eraseModifiableInput() {
+        var _a;
+        (_a = document.querySelectorAll('[contenteditable="true"]')) === null || _a === void 0 ? void 0 : _a.forEach(node => {
+            node.removeAttribute("contenteditable");
+            node.classList.remove("modifiable", "wrong");
+            node.innerText = "";
+        });
     }
     /**
      * Node erase user input
@@ -644,7 +733,7 @@ class SudokuHTMLHandler {
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
 
-},{"../GridNode":3,"../constants":11,"./SudokuValidator":9}],8:[function(require,module,exports){
+},{"../GridNode":3,"../Timer":11,"../constants":12,"./SudokuValidator":10}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuMatrixComponent = void 0;
@@ -719,7 +808,7 @@ class SudokuMatrixComponent {
 }
 exports.SudokuMatrixComponent = SudokuMatrixComponent;
 
-},{"../GridNode":3,"../constants":11,"./SudokuGeneratorUtils":6}],9:[function(require,module,exports){
+},{"../GridNode":3,"../constants":12,"./SudokuGeneratorUtils":7}],10:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuValidator = void 0;
@@ -781,57 +870,77 @@ class SudokuValidator {
 }
 exports.SudokuValidator = SudokuValidator;
 
-},{"../constants":11,"./SudokuGeneratorUtils":6}],10:[function(require,module,exports){
+},{"../constants":12,"./SudokuGeneratorUtils":7}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Timer = void 0;
 class Timer {
-    constructor() {
-        this.seconds = 0;
-        this.minutes = 0;
-        this.hours = 0;
-        this.intervalID = 0;
-    }
     /**
      * Start Timer
      * @param htmlId -- Node id containing the text to display
      */
-    start(htmlId) {
-        this.intervalID = window.setInterval(() => {
-            if (++this.seconds == 60) {
-                this.minutes++;
-                this.seconds = 0;
+    static start(htmlId) {
+        Timer.intervalID = window.setInterval(() => {
+            if (++Timer.seconds == 60) {
+                Timer.minutes++;
+                Timer.seconds = 0;
             }
-            if (this.minutes === 60) {
-                this.hours++;
-                this.minutes = 0;
+            if (Timer.minutes === 60) {
+                Timer.hours++;
+                Timer.minutes = 0;
             }
-            const lambdaFormat = (arg) => arg < 10 ? `0${arg}` : arg;
-            const hformat = lambdaFormat(this.hours);
-            const mformat = lambdaFormat(this.minutes);
-            const sformat = lambdaFormat(this.seconds);
-            document.getElementById(htmlId).innerText = `${hformat}:${mformat}:${sformat}`;
+            document.getElementById(htmlId).innerText = this.getTimeString();
         }, 1000);
+    }
+    static stop() {
+        window.clearInterval(Timer.intervalID);
+    }
+    static getTimeString() {
+        const hformat = Timer.format(Timer.hours);
+        const mformat = Timer.format(Timer.minutes);
+        const sformat = Timer.format(Timer.seconds);
+        return `${hformat}:${mformat}:${sformat}`;
+    }
+    static format(arg) {
+        return arg < 10 ? `0${arg}` : arg;
     }
     /**
      * Restart timer on Grid change
      * @param htmlId - Node id containing the text
      */
-    restart(htmlId) {
-        this.minutes = 0;
-        this.seconds = 0;
-        this.hours = 0;
-        window.clearInterval(this.intervalID);
+    static restart(htmlId) {
+        Timer.minutes = 0;
+        Timer.seconds = 0;
+        Timer.hours = 0;
+        window.clearInterval(Timer.intervalID);
         document.getElementById(htmlId).innerText = "00:00:00";
-        this.start(htmlId);
+        Timer.start(htmlId);
     }
 }
 exports.Timer = Timer;
+Timer.seconds = 0;
+Timer.minutes = 0;
+Timer.hours = 0;
+Timer.intervalID = 0;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SIDE_LENGTH = void 0;
 exports.SIDE_LENGTH = 9;
+
+},{}],13:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.testPerformance = void 0;
+function testPerformance(fn, iteration = 10000) {
+    let s = performance.now();
+    for (let i = 0; i < iteration; i++) {
+        fn();
+    }
+    let e = performance.now();
+    return e - s;
+}
+exports.testPerformance = testPerformance;
 
 },{}]},{},[1]);

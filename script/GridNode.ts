@@ -52,7 +52,7 @@ export class GridNode {
         if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * SIDE_LENGTH + col)) {
           square.classList.add("wrong");
         }
-        // Recompoute false values
+        // Recompute false values
 
         // End ?
         if (SudokuValidator.prototype.isGridEnd()) {

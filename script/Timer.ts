@@ -1,45 +1,55 @@
 export class Timer {
-  private seconds = 0;
-  private minutes = 0;
-  private hours = 0;
-  private intervalID = 0;
+  static seconds = 0;
+  static minutes = 0;
+  static hours = 0;
+  static intervalID = 0;
 
   /**
    * Start Timer
    * @param htmlId -- Node id containing the text to display 
    */
-  start(htmlId: string) {
-    this.intervalID = window.setInterval(() => {
-      if (++this.seconds == 60) {
-        this.minutes++;
-        this.seconds = 0;
+  static start(htmlId: string) {
+    Timer.intervalID = window.setInterval(() => {
+      if (++Timer.seconds == 60) {
+        Timer.minutes++;
+        Timer.seconds = 0;
       }
 
-      if (this.minutes === 60) {
-        this.hours++;
-        this.minutes = 0;
+      if (Timer.minutes === 60) {
+        Timer.hours++;
+        Timer.minutes = 0;
       }
 
-      const lambdaFormat = (arg: number) => arg < 10 ? `0${arg}` : arg;
-      const hformat = lambdaFormat(this.hours);
-      const mformat = lambdaFormat(this.minutes);
-      const sformat = lambdaFormat(this.seconds);
-      document.getElementById(htmlId)!.innerText = `${hformat}:${mformat}:${sformat}`;
-
+      document.getElementById(htmlId)!.innerText = this.getTimeString();
     }, 1000);
+  }
+
+  static stop() {
+    window.clearInterval(Timer.intervalID);
+  }
+
+  static getTimeString() {
+    const hformat = Timer.format(Timer.hours);
+    const mformat = Timer.format(Timer.minutes);
+    const sformat = Timer.format(Timer.seconds);
+    return `${hformat}:${mformat}:${sformat}`;
+  }
+
+  private static format(arg: number) {
+    return arg < 10 ? `0${arg}` : arg;
   }
 
   /**
    * Restart timer on Grid change
    * @param htmlId - Node id containing the text
    */
-  restart(htmlId: string) {
-    this.minutes = 0;
-    this.seconds = 0;
-    this.hours = 0;
-    window.clearInterval(this.intervalID);
+  static restart(htmlId: string) {
+    Timer.minutes = 0;
+    Timer.seconds = 0;
+    Timer.hours = 0;
+    window.clearInterval(Timer.intervalID);
     document.getElementById(htmlId)!.innerText = "00:00:00";
-    this.start(htmlId);
+    Timer.start(htmlId);
   }
 
 }

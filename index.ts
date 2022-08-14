@@ -1,16 +1,16 @@
-import { SIDE_LENGTH } from "./script/constants";
+import { startSudokuHTMLHandlePerfTest } from "./script/PerfTest/SudokuHTMLHandlers";
 import { SudokuBoard } from "./script/Sudoku";
 import { Timer } from "./script/Timer";
 
 const sudoku = new SudokuBoard();
-const timer = new Timer();
+let debug = false;
 
 main();
 
 // Generate new grid
 document.getElementById("generator")?.addEventListener("click", () => {
   sudoku.onRegeneration();
-  timer.restart("timer");
+  Timer.restart("timer");
 });
 
 // Unselect squares
@@ -28,7 +28,7 @@ document.getElementById('removeOne')?.addEventListener("click", (e) => {
  */
 function main() {
   sudoku.onFirstCreation('sudoku-section');
-  timer.start("timer");
+  Timer.start("timer");
 }
 
 // TODO =>
@@ -36,4 +36,8 @@ function main() {
 // 2) Victoire => Stoper le timer
 // 3) Cosmétique: faire disparaitre les chiffres boutons lorsque 9 exemplaires existent
 
+// TESTS 
+if (debug) {
+  startSudokuHTMLHandlePerfTest();
+}
 

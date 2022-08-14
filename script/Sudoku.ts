@@ -35,7 +35,7 @@ export class SudokuBoard {
    */
   onRegeneration() {
     this.matrix.clear();
-    this.htmlHandler.onNewGenerationClear();
+    this.htmlHandler.eraseModifiableInput();
     this.clearBoard();
     this.matrix.startFillProcess();
     this.htmlHandler.putToHTML(this.matrix.getMatrix());
@@ -50,7 +50,7 @@ export class SudokuBoard {
     this.digits.unselect();
     this.htmlHandler.setCurrentSelectedValue("");
     this.htmlHandler.clearNodesBackground();
-    this.htmlHandler.eraseUserInputOnCurrentGrid(this.matrix.getMatrix());
+    this.htmlHandler.eraseUserInputOnCurrentGrid();
   }
 
   /**
