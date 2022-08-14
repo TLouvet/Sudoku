@@ -18,7 +18,7 @@ main();
     sudoku.clearBoard();
 });
 // Erase current user input for current grid but keep the grid
-(_c = document.getElementById('removeOne')) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
+(_c = document.getElementById('restart')) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
     sudoku.erase();
 });
 /**
@@ -29,9 +29,7 @@ function main() {
     Timer_1.Timer.start("timer");
 }
 // TODO =>
-// 1) corriger bug où les valeurs ne sont pas recalculées => A chaque changement de valeur dans la grille, il faut recalculer les valeurs qui sont fausses
-// 2) Victoire => Stoper le timer
-// 3) Cosmétique: faire disparaitre les chiffres boutons lorsque 9 exemplaires existent
+// 2) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
 // TESTS 
 if (debug) {
     (0, SudokuHTMLHandlers_1.startSudokuHTMLHandlePerfTest)();
@@ -57,6 +55,9 @@ class DigitSelectors {
     //Creation 
     generate() {
         const parent = document.getElementById("selectors");
+        if (parent) {
+            parent.replaceChildren();
+        }
         for (let i = 0; i < 9; i++) {
             const btn = document.createElement("button");
             btn.setAttribute("id", `btn-selector-${i}`);
@@ -78,6 +79,21 @@ class DigitSelectors {
         (_a = document.getElementById(`btn-selector-${this.currentSelected}`)) === null || _a === void 0 ? void 0 : _a.classList.remove("btn-current");
         this.currentSelected = -1;
     }
+    /** */
+    static checkBtnVisibility(value) {
+        var _a;
+        if (value === 0)
+            return;
+        let counter = 0;
+        const index = value - 1;
+        (_a = document.querySelectorAll('[id^=square-')) === null || _a === void 0 ? void 0 : _a.forEach(node => counter += Number(node.innerText) === value ? 1 : 0);
+        if (counter >= 9) {
+            document.getElementById(`btn-selector-${index}`).style.visibility = "hidden";
+        }
+        else {
+            document.getElementById(`btn-selector-${index}`).style.visibility = "unset";
+        }
+    }
     /**
      * Make clicked button the vue selector + default filling option
      * @param htmlIdNbr
@@ -96,7 +112,7 @@ exports.DigitSelectors = DigitSelectors;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
 const constants_1 = require("./constants");
-const SudokuHTMLHandler_1 = require("./Sudoku/SudokuHTMLHandler");
+const DigitSelectors_1 = require("./DigitSelectors");
 const SudokuValidator_1 = require("./Sudoku/SudokuValidator");
 /**
  * Representation of a node
@@ -133,22 +149,21 @@ class GridNode {
     */
     createSingleSquare(row, col, digits) {
         const square = document.createElement("div");
-        square.setAttribute("id", `square-${row * constants_1.SIDE_LENGTH + col}`);
+        const currentId = row * constants_1.SIDE_LENGTH + col;
+        square.setAttribute("id", `square-${currentId}`);
         square.setAttribute("class", "square");
+        // Should probably be put into HTMLHandler at some point
         square.addEventListener("click", () => {
             if (square.innerText === '') {
                 const currentSelectedValue = digits.getCurrentSelectedID() + 1;
                 const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
                 square.innerText = valueToEnter;
-                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * constants_1.SIDE_LENGTH + col)) {
+                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, currentId)) {
                     square.classList.add("wrong");
                 }
-                // Recompute false values
-                // End ?
-                if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
-                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
-                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.displayWinMessage();
-                }
+                DigitSelectors_1.DigitSelectors.checkBtnVisibility(Number(valueToEnter)); // should a button disappear
+                SudokuValidator_1.SudokuValidator.recomputeWrongValues(currentId);
+                SudokuValidator_1.SudokuValidator.checkEndGame();
             }
         });
         return square;
@@ -156,7 +171,7 @@ class GridNode {
 }
 exports.GridNode = GridNode;
 
-},{"./Sudoku/SudokuHTMLHandler":8,"./Sudoku/SudokuValidator":10,"./constants":12}],4:[function(require,module,exports){
+},{"./DigitSelectors":2,"./Sudoku/SudokuValidator":10,"./constants":12}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startSudokuHTMLHandlePerfTest = void 0;
@@ -294,6 +309,7 @@ class SudokuBoard {
      * Erase user-values entered for current Grid
      */
     erase() {
+        this.digits.generate();
         this.digits.unselect();
         this.htmlHandler.setCurrentSelectedValue("");
         this.htmlHandler.clearNodesBackground();
@@ -524,6 +540,7 @@ exports.SudokuGeneratorUtils = SudokuGeneratorUtils;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
 const constants_1 = require("../constants");
+const DigitSelectors_1 = require("../DigitSelectors");
 const GridNode_1 = require("../GridNode");
 const Timer_1 = require("../Timer");
 const SudokuValidator_1 = require("./SudokuValidator");
@@ -590,13 +607,15 @@ class SudokuHTMLHandler {
                         if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
                             return;
                         }
-                        // Overwrite & highlight
-                        node.innerText = e.key !== "Backspace" ? e.key : "";
-                        this.highlight(Number(e.key));
+                        const primitiveValue = node.innerText;
+                        // Node value update
                         if (!isBackspace) {
+                            node.innerText = e.key;
                             node.classList.add("selected");
+                            this.highlight(Number(e.key));
                         }
                         else {
+                            node.innerText = "";
                             node.classList.remove("selected");
                         }
                         // Verify process
@@ -606,22 +625,17 @@ class SudokuHTMLHandler {
                         else {
                             node.classList.remove("wrong");
                         }
-                        // Recompute all false values
-                        // Is this the end?
-                        if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
-                            this.removeNodeModificationOnWin();
-                            this.displayWinMessage();
-                        }
+                        DigitSelectors_1.DigitSelectors.checkBtnVisibility(isBackspace ? Number(primitiveValue) : Number(e.key));
+                        SudokuValidator_1.SudokuValidator.recomputeWrongValues(current);
+                        SudokuValidator_1.SudokuValidator.checkEndGame();
                     });
                 }
             }
         }
     }
     ;
-    removeNodeModificationOnWin() {
+    static endGame() {
         document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
-    }
-    displayWinMessage() {
         Timer_1.Timer.stop();
         const node = document.getElementById("end");
         if (node)
@@ -678,17 +692,6 @@ class SudokuHTMLHandler {
         });
     }
     /**
-     * Node erase user input
-     * @param id
-     */
-    eraseOneNodeInput(id) {
-        const node = document.getElementById(id);
-        if (node) {
-            node.innerText = "";
-            node.classList.remove("selected", "wrong");
-        }
-    }
-    /**
     * Board full line creation
     * @param div
     * @param row
@@ -733,7 +736,7 @@ class SudokuHTMLHandler {
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
 
-},{"../GridNode":3,"../Timer":11,"../constants":12,"./SudokuValidator":10}],9:[function(require,module,exports){
+},{"../DigitSelectors":2,"../GridNode":3,"../Timer":11,"../constants":12,"./SudokuValidator":10}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuMatrixComponent = void 0;
@@ -814,6 +817,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuValidator = void 0;
 const constants_1 = require("../constants");
 const SudokuGeneratorUtils_1 = require("./SudokuGeneratorUtils");
+const SudokuHTMLHandler_1 = require("./SudokuHTMLHandler");
 class SudokuValidator {
     /**
      * Checks for an entry if it does not conflict with already known information
@@ -855,22 +859,40 @@ class SudokuValidator {
         return true;
     }
     /**
+     * On each entry, recompute values that were labelled wrong
+     * @param currentId - avoid recomputing the value just entered by the user
+     */
+    static recomputeWrongValues(currentId) {
+        document.querySelectorAll('.wrong').forEach(node => {
+            const nodeid = Number(node.id.split('-')[1]);
+            if (nodeid !== currentId) {
+                const r = Math.trunc(nodeid / constants_1.SIDE_LENGTH);
+                const c = nodeid % constants_1.SIDE_LENGTH;
+                const value = Number(node.innerText);
+                if (SudokuValidator.prototype.isCorrect(value, r, c, nodeid)) {
+                    node.classList.remove("wrong");
+                }
+            }
+        });
+    }
+    /**
      * If the whole grid is filled with no error, it's the end
      * @returns
      */
-    isGridEnd() {
+    static checkEndGame() {
         for (let i = 0; i < constants_1.SIDE_LENGTH * constants_1.SIDE_LENGTH; i++) {
             const node = document.getElementById(`square-${i}`);
             if ((node === null || node === void 0 ? void 0 : node.innerHTML) == '' || (node === null || node === void 0 ? void 0 : node.classList.contains("wrong"))) {
                 return false;
             }
         }
+        SudokuHTMLHandler_1.SudokuHTMLHandler.endGame();
         return true;
     }
 }
 exports.SudokuValidator = SudokuValidator;
 
-},{"../constants":12,"./SudokuGeneratorUtils":7}],11:[function(require,module,exports){
+},{"../constants":12,"./SudokuGeneratorUtils":7,"./SudokuHTMLHandler":8}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Timer = void 0;

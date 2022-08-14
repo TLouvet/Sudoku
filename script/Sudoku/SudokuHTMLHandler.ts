@@ -75,13 +75,15 @@ export class SudokuHTMLHandler {
             if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
               return;
             }
-            // Overwrite & highlight
-            node.innerText = e.key !== "Backspace" ? e.key : "";
-            this.highlight(Number(e.key));
 
+            const primitiveValue = node.innerText;
+            // Node value update
             if (!isBackspace) {
+              node.innerText = e.key;
               node.classList.add("selected");
+              this.highlight(Number(e.key));
             } else {
+              node.innerText = "";
               node.classList.remove("selected");
             }
 
@@ -92,24 +94,17 @@ export class SudokuHTMLHandler {
               node.classList.remove("wrong");
             }
 
-            // Recompute all false values
-
-            // Is this the end?
-            if (SudokuValidator.prototype.isGridEnd()) {
-              this.removeNodeModificationOnWin();
-              this.displayWinMessage();
-            }
+            DigitSelectors.checkBtnVisibility(isBackspace ? Number(primitiveValue) : Number(e.key));
+            SudokuValidator.recomputeWrongValues(current);
+            SudokuValidator.checkEndGame();
           })
         }
       }
     }
   };
 
-  removeNodeModificationOnWin() {
+  static endGame() {
     document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
-  }
-
-  displayWinMessage() {
     Timer.stop();
     const node = document.getElementById("end");
     if (node) node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";

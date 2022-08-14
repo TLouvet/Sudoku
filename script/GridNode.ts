@@ -42,24 +42,23 @@ export class GridNode {
   */
   createSingleSquare(row: number, col: number, digits: DigitSelectors) {
     const square = document.createElement("div");
-    square.setAttribute("id", `square-${row * SIDE_LENGTH + col}`);
+    const currentId = row * SIDE_LENGTH + col
+    square.setAttribute("id", `square-${currentId}`);
     square.setAttribute("class", "square");
+    // Should probably be put into HTMLHandler at some point
     square.addEventListener("click", () => {
       if (square.innerText === '') {
         const currentSelectedValue = digits.getCurrentSelectedID() + 1;
         const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
         square.innerText = valueToEnter;
-        if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * SIDE_LENGTH + col)) {
+        if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, currentId)) {
           square.classList.add("wrong");
         }
-        // Recompute false values
 
-        // End ?
-        if (SudokuValidator.prototype.isGridEnd()) {
-          SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
-          SudokuHTMLHandler.prototype.displayWinMessage();
-        }
 
+        DigitSelectors.checkBtnVisibility(Number(valueToEnter)); // should a button disappear
+        SudokuValidator.recomputeWrongValues(currentId);
+        SudokuValidator.checkEndGame();
       }
     })
     return square;

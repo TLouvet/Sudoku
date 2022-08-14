@@ -1,5 +1,6 @@
 import { SIDE_LENGTH } from "../constants";
 import { SudokuGeneratorUtils } from "./SudokuGeneratorUtils";
+import { SudokuHTMLHandler } from "./SudokuHTMLHandler";
 
 export class SudokuValidator {
 
@@ -45,16 +46,36 @@ export class SudokuValidator {
   }
 
   /**
+   * On each entry, recompute values that were labelled wrong
+   * @param currentId - avoid recomputing the value just entered by the user
+   */
+  static recomputeWrongValues(currentId: number) {
+    document.querySelectorAll('.wrong').forEach(node => {
+      const nodeid = Number(node.id.split('-')[1]);
+      if (nodeid !== currentId) {
+        const r = Math.trunc(nodeid / SIDE_LENGTH);
+        const c = nodeid % SIDE_LENGTH;
+        const value = Number((node as HTMLElement).innerText);
+        if (SudokuValidator.prototype.isCorrect(value, r, c, nodeid)) {
+          node.classList.remove("wrong");
+        }
+      }
+    })
+  }
+
+  /**
    * If the whole grid is filled with no error, it's the end
    * @returns 
    */
-  isGridEnd() {
+  static checkEndGame() {
     for (let i = 0; i < SIDE_LENGTH * SIDE_LENGTH; i++) {
       const node = document.getElementById(`square-${i}`);
       if (node?.innerHTML == '' || node?.classList.contains("wrong")) {
         return false;
       }
     }
+
+    SudokuHTMLHandler.endGame();
     return true;
   }
 }

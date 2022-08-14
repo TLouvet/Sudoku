@@ -18,6 +18,10 @@ export class DigitSelectors {
 
   generate() {
     const parent = document.getElementById("selectors");
+    if (parent) {
+      parent.replaceChildren();
+    }
+
     for (let i = 0; i < 9; i++) {
       const btn = document.createElement("button");
       btn.setAttribute("id", `btn-selector-${i}`);
@@ -40,6 +44,21 @@ export class DigitSelectors {
   unselect() {
     document.getElementById(`btn-selector-${this.currentSelected}`)?.classList.remove("btn-current");
     this.currentSelected = -1;
+  }
+
+  /** */
+  static checkBtnVisibility(value: number) {
+    if (value === 0) return;
+
+    let counter = 0;
+    const index = value - 1;
+    document.querySelectorAll('[id^=square-')?.forEach(node => counter += Number((node as HTMLElement).innerText) === value ? 1 : 0);
+
+    if (counter >= 9) {
+      document.getElementById(`btn-selector-${index}`)!.style.visibility = "hidden";
+    } else {
+      document.getElementById(`btn-selector-${index}`)!.style.visibility = "unset";
+    }
   }
 
   /**
