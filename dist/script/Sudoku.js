@@ -44,6 +44,7 @@ class SudokuBoard {
      * Erase user-values entered for current Grid
      */
     erase() {
+        this.digits.generate();
         this.digits.unselect();
         this.htmlHandler.setCurrentSelectedValue("");
         this.htmlHandler.clearNodesBackground();

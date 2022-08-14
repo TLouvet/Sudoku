@@ -19,7 +19,8 @@ document.getElementById("removeBack")?.addEventListener("click", () => {
 });
 
 // Erase current user input for current grid but keep the grid
-document.getElementById('removeOne')?.addEventListener("click", (e) => {
+document.getElementById('restart')?.addEventListener("click", (e) => {
+
   sudoku.erase();
 })
 
@@ -32,9 +33,7 @@ function main() {
 }
 
 // TODO =>
-// 1) corriger bug où les valeurs ne sont pas recalculées => A chaque changement de valeur dans la grille, il faut recalculer les valeurs qui sont fausses
-// 2) Victoire => Stoper le timer
-// 3) Cosmétique: faire disparaitre les chiffres boutons lorsque 9 exemplaires existent
+// 2) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
 
 // TESTS 
 if (debug) {

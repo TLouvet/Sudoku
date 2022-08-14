@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
 const constants_1 = require("./constants");
-const SudokuHTMLHandler_1 = require("./Sudoku/SudokuHTMLHandler");
+const DigitSelectors_1 = require("./DigitSelectors");
 const SudokuValidator_1 = require("./Sudoku/SudokuValidator");
 /**
  * Representation of a node
@@ -39,22 +39,21 @@ class GridNode {
     */
     createSingleSquare(row, col, digits) {
         const square = document.createElement("div");
-        square.setAttribute("id", `square-${row * constants_1.SIDE_LENGTH + col}`);
+        const currentId = row * constants_1.SIDE_LENGTH + col;
+        square.setAttribute("id", `square-${currentId}`);
         square.setAttribute("class", "square");
+        // Should probably be put into HTMLHandler at some point
         square.addEventListener("click", () => {
             if (square.innerText === '') {
                 const currentSelectedValue = digits.getCurrentSelectedID() + 1;
                 const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
                 square.innerText = valueToEnter;
-                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * constants_1.SIDE_LENGTH + col)) {
+                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, currentId)) {
                     square.classList.add("wrong");
                 }
-                // Recompute false values
-                // End ?
-                if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
-                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
-                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.displayWinMessage();
-                }
+                DigitSelectors_1.DigitSelectors.checkBtnVisibility(Number(valueToEnter)); // should a button disappear
+                SudokuValidator_1.SudokuValidator.recomputeWrongValues(currentId);
+                SudokuValidator_1.SudokuValidator.checkEndGame();
             }
         });
         return square;

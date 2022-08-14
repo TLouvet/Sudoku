@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
 const constants_1 = require("../constants");
+const DigitSelectors_1 = require("../DigitSelectors");
 const GridNode_1 = require("../GridNode");
 const Timer_1 = require("../Timer");
 const SudokuValidator_1 = require("./SudokuValidator");
@@ -68,13 +69,15 @@ class SudokuHTMLHandler {
                         if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
                             return;
                         }
-                        // Overwrite & highlight
-                        node.innerText = e.key !== "Backspace" ? e.key : "";
-                        this.highlight(Number(e.key));
+                        const primitiveValue = node.innerText;
+                        // Node value update
                         if (!isBackspace) {
+                            node.innerText = e.key;
                             node.classList.add("selected");
+                            this.highlight(Number(e.key));
                         }
                         else {
+                            node.innerText = "";
                             node.classList.remove("selected");
                         }
                         // Verify process
@@ -84,22 +87,17 @@ class SudokuHTMLHandler {
                         else {
                             node.classList.remove("wrong");
                         }
-                        // Recompute all false values
-                        // Is this the end?
-                        if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
-                            this.removeNodeModificationOnWin();
-                            this.displayWinMessage();
-                        }
+                        DigitSelectors_1.DigitSelectors.checkBtnVisibility(isBackspace ? Number(primitiveValue) : Number(e.key));
+                        SudokuValidator_1.SudokuValidator.recomputeWrongValues(current);
+                        SudokuValidator_1.SudokuValidator.checkEndGame();
                     });
                 }
             }
         }
     }
     ;
-    removeNodeModificationOnWin() {
+    static endGame() {
         document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
-    }
-    displayWinMessage() {
         Timer_1.Timer.stop();
         const node = document.getElementById("end");
         if (node)
@@ -154,17 +152,6 @@ class SudokuHTMLHandler {
             node.classList.remove("modifiable", "wrong");
             node.innerText = "";
         });
-    }
-    /**
-     * Node erase user input
-     * @param id
-     */
-    eraseOneNodeInput(id) {
-        const node = document.getElementById(id);
-        if (node) {
-            node.innerText = "";
-            node.classList.remove("selected", "wrong");
-        }
     }
     /**
     * Board full line creation
