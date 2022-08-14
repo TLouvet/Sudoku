@@ -10,7 +10,6 @@ Le build est alors mis à jour.
 
 <h2>Known issues / Feature manquante</h2>
 
-- BUG: lorsqu'une valeur est supprimée, si elle générait d'autres erreurs (exemple: deux 1 côte à côte qui s'affichent tous les deux en rouge)
-les erreurs qui n'en sont plus restent marquées en rouge
+- Les grilles proposées ont parfois plus d'une solution, actuellement l'algorithme cherche juste à retrouver la matrice d'origine à partir d'une copie amputée de certains nombres.
 
-- FEATURE: Faire disparaitre les boutons de sélection pour un chiffre lorsque 9 versions existent
+S'il trouve une solution autre avant, alors cette copie est invalidée et une nouvelle copie est essayée. Il faudrait dans l'idée continuer la recherche, mais le temps de réponse n'est pas optimal pour l'instant.
