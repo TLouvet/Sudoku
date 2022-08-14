@@ -1,6 +1,7 @@
 import { SIDE_LENGTH } from "../constants";
 import { DigitSelectors } from "../DigitSelectors";
 import { GridNode } from "../GridNode";
+import { Timer } from "../Timer";
 import { SudokuValidator } from "./SudokuValidator";
 
 export class SudokuHTMLHandler {
@@ -54,9 +55,7 @@ export class SudokuHTMLHandler {
    * If a value was selected, remove squares with highlight background
    */
   clearNodesBackground() {
-    for (let x = 0; x < 81; x++) {
-      document.getElementById(`square-${x}`)?.classList.remove("selected");
-    }
+    document.querySelectorAll('.selected').forEach(e => e.classList.remove("selected"));
     this.currentSelectedBtn = "";
   }
 
@@ -69,13 +68,15 @@ export class SudokuHTMLHandler {
           node?.setAttribute("contenteditable", "true");
           node?.classList.add("modifiable");
           node?.addEventListener("keydown", (e) => {
+            e.preventDefault();
             const isBackspace = e.key === "Backspace"
+            const current = i * SIDE_LENGTH + j;
+            // Valid entry
             if ((isNaN(Number(e.key)) && !isBackspace) || Number(e.key) === 0) {
-              e.preventDefault();
               return;
             }
             // Overwrite & highlight
-            node.innerText = "";
+            node.innerText = e.key !== "Backspace" ? e.key : "";
             this.highlight(Number(e.key));
 
             if (!isBackspace) {
@@ -85,64 +86,83 @@ export class SudokuHTMLHandler {
             }
 
             // Verify process
-            if (!isBackspace && !SudokuValidator.prototype.isCorrect(Number(e.key), i, j)) {
+            if (!isBackspace && !SudokuValidator.prototype.isCorrect(Number(e.key), i, j, current)) {
               node.classList.add("wrong");
             } else {
               node.classList.remove("wrong");
             }
 
+            // Recompute all false values
+
+            // Is this the end?
+            if (SudokuValidator.prototype.isGridEnd()) {
+              this.removeNodeModificationOnWin();
+              this.displayWinMessage();
+            }
           })
         }
       }
     }
   };
 
+  removeNodeModificationOnWin() {
+    document.querySelectorAll("[contenteditable='true']").forEach(e => e.removeAttribute("contenteditable"));
+  }
+
+  displayWinMessage() {
+    Timer.stop();
+    const node = document.getElementById("end");
+    if (node) node.innerText = "Bravo, vous avez gagné ! Cliquez sur Générer pour recommencer.";
+  }
+
+  removeWinMessage() {
+    document.getElementById("end")!.innerHTML = "";
+  }
+
+  /**
+   * Ability to highlight onclick
+   */
+  highlightSquaresOnClick() {
+    document.querySelectorAll('[id^="square-"]')?.forEach(e => e.addEventListener("click", (evt) => {
+      const value = Number((evt as any).target?.innerText);
+      this.highlight(value);
+    }));
+  }
+
   /**
    * Show squares holding given value
    * @param value 
    */
   highlight(value: number) {
-    for (let i = 0; i < 81; i++) {
-      const node = document.getElementById(`square-${i}`)
-      const val = Number(node?.innerText);
-      node?.classList.remove("selected");
-      if (node?.innerText && val === value) node.classList.add("selected");
-    }
+    document.querySelectorAll('.selected')?.forEach(n => n.classList.remove("selected"));
+    document.querySelectorAll('[id^="square-"]')?.forEach(e => {
+      const val = Number((e as HTMLElement).innerText);
+      if (val && val === value) {
+        e.classList.add("selected");
+      }
+    })
   }
 
   /**
    * Erase user inputs on current grid
    * @param matrix 
    */
-  eraseUserInputOnCurrentGrid(matrix: GridNode[][]) {
-    for (let i = 0; i < SIDE_LENGTH; i++) {
-      for (let j = 0; j < SIDE_LENGTH; j++) {
-        if (matrix[i][j].isModifiable()) {
-          this.eraseOneNodeInput(`square-${i * SIDE_LENGTH + j}`);
-        }
-      }
-    }
-  }
-
-  private eraseOneNodeInput(id: string) {
-    const node = document.getElementById(id);
-    if (node) {
-      node.innerText = "";
-      node.classList.remove("selected", "wrong")
-    }
+  eraseUserInputOnCurrentGrid() {
+    document.querySelectorAll('[contenteditable="true"]')?.forEach(node => {
+      node.classList.remove("selected", "wrong");
+      (node as HTMLElement).innerText = "";
+    })
   }
 
   /**
-   * delete modifiable squares related CSS and conteneditable property
+   * delete modifiable squares related CSS and conteneditable property in order to regenerate grid
    */
-  onNewGenerationClear() {
-    for (let i = 0; i < SIDE_LENGTH; i++) {
-      for (let j = 0; j < SIDE_LENGTH; j++) {
-        const node = document.getElementById(`square-${i * SIDE_LENGTH + j}`);
-        node?.removeAttribute("contenteditable");
-        node?.classList.remove("modifiable", "wrong");
-      }
-    }
+  eraseModifiableInput() {
+    document.querySelectorAll('[contenteditable="true"]')?.forEach(node => {
+      node.removeAttribute("contenteditable");
+      node.classList.remove("modifiable", "wrong");
+      (node as HTMLElement).innerText = "";
+    })
   }
 
   /**

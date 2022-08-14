@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GridNode = void 0;
 const constants_1 = require("./constants");
+const SudokuHTMLHandler_1 = require("./Sudoku/SudokuHTMLHandler");
 const SudokuValidator_1 = require("./Sudoku/SudokuValidator");
 /**
  * Representation of a node
@@ -43,11 +44,17 @@ class GridNode {
         square.addEventListener("click", () => {
             if (square.innerText === '') {
                 const currentSelectedValue = digits.getCurrentSelectedID() + 1;
-                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col)) {
-                    square.classList.add("wrong");
-                }
                 const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
                 square.innerText = valueToEnter;
+                if (!SudokuValidator_1.SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * constants_1.SIDE_LENGTH + col)) {
+                    square.classList.add("wrong");
+                }
+                // Recompute false values
+                // End ?
+                if (SudokuValidator_1.SudokuValidator.prototype.isGridEnd()) {
+                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
+                    SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.displayWinMessage();
+                }
             }
         });
         return square;

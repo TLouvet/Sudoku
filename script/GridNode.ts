@@ -1,5 +1,6 @@
 import { SIDE_LENGTH } from "./constants";
 import { DigitSelectors } from "./DigitSelectors";
+import { SudokuHTMLHandler } from "./Sudoku/SudokuHTMLHandler";
 import { SudokuValidator } from "./Sudoku/SudokuValidator";
 
 /**
@@ -46,12 +47,19 @@ export class GridNode {
     square.addEventListener("click", () => {
       if (square.innerText === '') {
         const currentSelectedValue = digits.getCurrentSelectedID() + 1;
-        if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col)) {
-          square.classList.add("wrong");
-        }
-
         const valueToEnter = currentSelectedValue > 0 ? `${currentSelectedValue}` : '';
         square.innerText = valueToEnter;
+        if (!SudokuValidator.prototype.isCorrect(currentSelectedValue, row, col, row * SIDE_LENGTH + col)) {
+          square.classList.add("wrong");
+        }
+        // Recompute false values
+
+        // End ?
+        if (SudokuValidator.prototype.isGridEnd()) {
+          SudokuHTMLHandler.prototype.removeNodeModificationOnWin();
+          SudokuHTMLHandler.prototype.displayWinMessage();
+        }
+
       }
     })
     return square;
