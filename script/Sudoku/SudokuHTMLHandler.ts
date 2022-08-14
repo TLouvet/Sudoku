@@ -26,6 +26,7 @@ export class SudokuHTMLHandler {
     if (!boardContainer) {
       throw new Error("Aucun élément n'existe avec l'id donné");
     }
+    boardContainer.replaceChildren(); // Eliminate loader
 
     for (let i = 0; i < SIDE_LENGTH; i++) {
       boardContainer.appendChild(this.createLine(i, digits));
@@ -34,18 +35,25 @@ export class SudokuHTMLHandler {
     this.setLargerBorders();
   }
 
+  static createLoader() {
+    document.getElementById('sudoku-section')!.replaceChildren();
+    const loader = document.createElement('div');
+    loader.classList.add('rotator');
+    document.getElementById('sudoku-section')?.appendChild(loader);
+  }
+
   /**
-  * Put matrix values into HTML board representation
+  * Put matrix values into HTML board representation and decide which ones are shown
   * @param matrix - Board Matrix 
   */
-  putToHTML(matrix: GridNode[][]) {
+  putToHTML(unfilledMatrix: GridNode[][], matrixComponent: GridNode[][]) {
     for (let i = 0; i < SIDE_LENGTH; i++) {
       for (let j = 0; j < SIDE_LENGTH; j++) {
         const id = i * SIDE_LENGTH + j;
         const node = document.getElementById(`square-${id}`);
         if (node) {
-          node.innerText = Math.random() > 0.55 ? matrix[i][j].getValue()!.toString() : "";
-          node.innerText === "" && matrix[i][j].setModifiable(true);
+          node.innerText = unfilledMatrix[i][j].getValue()?.toString() || '';
+          node.innerText === "" && matrixComponent[i][j].setModifiable(true);
         }
       }
     }

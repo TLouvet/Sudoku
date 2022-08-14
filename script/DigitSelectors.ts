@@ -39,6 +39,10 @@ export class DigitSelectors {
     })
   }
 
+  removeHTML() {
+    document.getElementById("selectors")!.replaceChildren();
+  }
+
   // Current btn operations
 
   unselect() {

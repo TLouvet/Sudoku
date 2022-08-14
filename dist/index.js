@@ -28,7 +28,8 @@ function main() {
     Timer_1.Timer.start("timer");
 }
 // TODO =>
-// 2) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 1) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 2) Empêcher saisie d'une valeur si son bouton est hidden ?
 // TESTS 
 if (debug) {
     (0, SudokuHTMLHandlers_1.startSudokuHTMLHandlePerfTest)();

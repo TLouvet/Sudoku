@@ -29,13 +29,14 @@ function main() {
     Timer_1.Timer.start("timer");
 }
 // TODO =>
-// 2) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 1) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 2) Empêcher saisie d'une valeur si son bouton est hidden ?
 // TESTS 
 if (debug) {
     (0, SudokuHTMLHandlers_1.startSudokuHTMLHandlePerfTest)();
 }
 
-},{"./script/PerfTest/SudokuHTMLHandlers":4,"./script/Sudoku":5,"./script/Timer":11}],2:[function(require,module,exports){
+},{"./script/PerfTest/SudokuHTMLHandlers":4,"./script/Sudoku":5,"./script/Timer":12}],2:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DigitSelectors = void 0;
@@ -72,6 +73,9 @@ class DigitSelectors {
             SudokuHTMLHandler_1.SudokuHTMLHandler.prototype.highlight(id + 1);
             this.makeNewCurrent(id, node);
         });
+    }
+    removeHTML() {
+        document.getElementById("selectors").replaceChildren();
     }
     // Current btn operations
     unselect() {
@@ -171,7 +175,7 @@ class GridNode {
 }
 exports.GridNode = GridNode;
 
-},{"./DigitSelectors":2,"./Sudoku/SudokuValidator":10,"./constants":12}],4:[function(require,module,exports){
+},{"./DigitSelectors":2,"./Sudoku/SudokuValidator":11,"./constants":13}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startSudokuHTMLHandlePerfTest = void 0;
@@ -262,13 +266,14 @@ function startSudokuHTMLHandlePerfTest() {
 }
 exports.startSudokuHTMLHandlePerfTest = startSudokuHTMLHandlePerfTest;
 
-},{"../constants":12,"../test":13}],5:[function(require,module,exports){
+},{"../constants":13,"../test":14}],5:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuBoard = void 0;
 const DigitSelectors_1 = require("./DigitSelectors");
 const SudokuHTMLHandler_1 = require("./Sudoku/SudokuHTMLHandler");
 const SudokuMatrixComponent_1 = require("./Sudoku/SudokuMatrixComponent");
+const SudokuSolver_1 = require("./Sudoku/SudokuSolver");
 class SudokuBoard {
     constructor() {
         this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler();
@@ -286,12 +291,16 @@ class SudokuBoard {
      * @param id
      */
     onFirstCreation(id) {
-        this.htmlHandler.createBoard(id, this.digits);
-        this.digits.generate();
-        this.matrix.startFillProcess();
-        this.htmlHandler.putToHTML(this.matrix.getMatrix());
-        this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
-        this.htmlHandler.highlightSquaresOnClick();
+        SudokuHTMLHandler_1.SudokuHTMLHandler.createLoader();
+        window.setTimeout(() => {
+            this.matrix.startFillProcess();
+            const solution = (0, SudokuSolver_1.getSameSolutionMatrix)(this.matrix.getMatrix());
+            this.htmlHandler.createBoard(id, this.digits);
+            this.digits.generate();
+            this.htmlHandler.putToHTML(solution, this.matrix.getMatrix());
+            this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+            this.htmlHandler.highlightSquaresOnClick();
+        }, 1000);
     }
     /**
      * User asking to get a new grid
@@ -299,11 +308,20 @@ class SudokuBoard {
     onRegeneration() {
         this.matrix.clear();
         this.htmlHandler.eraseModifiableInput();
+        this.digits.removeHTML();
         this.clearBoard();
-        this.matrix.startFillProcess();
-        this.htmlHandler.putToHTML(this.matrix.getMatrix());
-        this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
-        this.htmlHandler.removeWinMessage();
+        SudokuHTMLHandler_1.SudokuHTMLHandler.createLoader();
+        window.setTimeout(() => {
+            this.matrix.startFillProcess();
+            const solution = (0, SudokuSolver_1.getSameSolutionMatrix)(this.matrix.getMatrix());
+            // Remove loader
+            this.htmlHandler.createBoard('sudoku-section', this.digits);
+            this.digits.generate();
+            this.htmlHandler.putToHTML(solution, this.matrix.getMatrix());
+            this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+            this.htmlHandler.highlightSquaresOnClick();
+            this.htmlHandler.removeWinMessage();
+        }, 1000);
     }
     /**
      * Erase user-values entered for current Grid
@@ -323,10 +341,17 @@ class SudokuBoard {
         this.htmlHandler.setCurrentSelectedValue("");
         this.htmlHandler.clearNodesBackground();
     }
+    /**
+     * Gets the GridNode matrix
+     * @returns
+     */
+    getMatrix() {
+        return this.matrix.getMatrix();
+    }
 }
 exports.SudokuBoard = SudokuBoard;
 
-},{"./DigitSelectors":2,"./Sudoku/SudokuHTMLHandler":8,"./Sudoku/SudokuMatrixComponent":9}],6:[function(require,module,exports){
+},{"./DigitSelectors":2,"./Sudoku/SudokuHTMLHandler":8,"./Sudoku/SudokuMatrixComponent":9,"./Sudoku/SudokuSolver":10}],6:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
@@ -446,7 +471,7 @@ class SudokuHTMLHandler {
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
 
-},{"./GridNode":3,"./constants":12}],7:[function(require,module,exports){
+},{"./GridNode":3,"./constants":13}],7:[function(require,module,exports){
 "use strict";
 /**
  * SudokuGeneratorUtils.ts
@@ -535,7 +560,7 @@ class SudokuGeneratorUtils {
 }
 exports.SudokuGeneratorUtils = SudokuGeneratorUtils;
 
-},{"../constants":12}],8:[function(require,module,exports){
+},{"../constants":13}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuHTMLHandler = void 0;
@@ -563,23 +588,32 @@ class SudokuHTMLHandler {
         if (!boardContainer) {
             throw new Error("Aucun élément n'existe avec l'id donné");
         }
+        boardContainer.replaceChildren(); // Eliminate loader
         for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             boardContainer.appendChild(this.createLine(i, digits));
         }
         this.setLargerBorders();
     }
+    static createLoader() {
+        var _a;
+        document.getElementById('sudoku-section').replaceChildren();
+        const loader = document.createElement('div');
+        loader.classList.add('rotator');
+        (_a = document.getElementById('sudoku-section')) === null || _a === void 0 ? void 0 : _a.appendChild(loader);
+    }
     /**
-    * Put matrix values into HTML board representation
+    * Put matrix values into HTML board representation and decide which ones are shown
     * @param matrix - Board Matrix
     */
-    putToHTML(matrix) {
+    putToHTML(unfilledMatrix, matrixComponent) {
+        var _a;
         for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
             for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
                 const id = i * constants_1.SIDE_LENGTH + j;
                 const node = document.getElementById(`square-${id}`);
                 if (node) {
-                    node.innerText = Math.random() > 0.55 ? matrix[i][j].getValue().toString() : "";
-                    node.innerText === "" && matrix[i][j].setModifiable(true);
+                    node.innerText = ((_a = unfilledMatrix[i][j].getValue()) === null || _a === void 0 ? void 0 : _a.toString()) || '';
+                    node.innerText === "" && matrixComponent[i][j].setModifiable(true);
                 }
             }
         }
@@ -736,7 +770,7 @@ class SudokuHTMLHandler {
 }
 exports.SudokuHTMLHandler = SudokuHTMLHandler;
 
-},{"../DigitSelectors":2,"../GridNode":3,"../Timer":11,"../constants":12,"./SudokuValidator":10}],9:[function(require,module,exports){
+},{"../DigitSelectors":2,"../GridNode":3,"../Timer":12,"../constants":13,"./SudokuValidator":11}],9:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuMatrixComponent = void 0;
@@ -811,7 +845,124 @@ class SudokuMatrixComponent {
 }
 exports.SudokuMatrixComponent = SudokuMatrixComponent;
 
-},{"../GridNode":3,"../constants":12,"./SudokuGeneratorUtils":7}],10:[function(require,module,exports){
+},{"../GridNode":3,"../constants":13,"./SudokuGeneratorUtils":7}],10:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSameSolutionMatrix = exports.SudokuSolver = void 0;
+const constants_1 = require("../constants");
+const GridNode_1 = require("../GridNode");
+const SudokuGeneratorUtils_1 = require("./SudokuGeneratorUtils");
+class SudokuSolver {
+    /**
+  * Recursively fill matrix and backtracks when no solution found
+  * Fill Matrix column by column, from left to right, top to bottom
+  * @param matrix
+  * @param col
+  * @param row
+  * @returns
+  */
+    static fill(matrix, col, row) {
+        // ensure next does not go out of range - in this version where we potentially skip, we want to have that first
+        const rowsend = row + 1 > constants_1.SIDE_LENGTH - 1 ? 0 : row + 1;
+        const colsend = SudokuGeneratorUtils_1.SudokuGeneratorUtils.prototype.getNextSquareCol(rowsend, col);
+        const isModifiable = matrix[row][col].isModifiable();
+        // This is the last one and number already exists
+        if (SudokuSolver.isComplete(row, col) && !isModifiable) {
+            return matrix;
+        }
+        else if (!isModifiable) {
+            return SudokuSolver.fill(matrix, colsend, rowsend);
+        }
+        // No number exist on this square, thus we search
+        const possibilities = SudokuGeneratorUtils_1.SudokuGeneratorUtils.prototype.getPossibleValuesForOneSquare(matrix, row, col);
+        if (possibilities.length === 0) {
+            return null;
+        }
+        // Last entry of the grid 
+        if (SudokuSolver.isComplete(row, col)) {
+            matrix[row][col].setValue(possibilities[0]);
+            return matrix;
+        }
+        // This is the backtracking part
+        for (let i = 0; i < possibilities.length; i++) {
+            matrix[row][col].setValue(possibilities[i]);
+            if (this.fill(matrix, colsend, rowsend)) {
+                return matrix; // if we get here, then we have a potential valid solution for current square
+            }
+            ;
+        }
+        // No solution while following current path, let's backtrack
+        matrix[row][col].setValue(null);
+        return null;
+    }
+    static isComplete(row, col) {
+        return row == constants_1.SIDE_LENGTH - 1 && col == constants_1.SIDE_LENGTH - 1;
+    }
+}
+exports.SudokuSolver = SudokuSolver;
+/**
+ * Creates a matrix with missing values and tries to get back to the original one via an altered fill method.
+ * The filling is not shuffled on the fill method for the verificator.
+ * Does not guarantee a unique solution exists, but will definitely eliminate some grids in the process.
+ * Downside is it seems to only work with high number placement
+ * @param matrix
+ */
+function getSameSolutionMatrix(matrix) {
+    // Create a copy with amputed numbers 
+    let arr = [];
+    let filled = null;
+    while (!areSame(matrix, filled)) {
+        arr = copyMainMatrix(matrix);
+        const copyArr = makeCopyArr(arr);
+        filled = SudokuSolver.fill(copyArr, 0, 0);
+    }
+    return arr;
+}
+exports.getSameSolutionMatrix = getSameSolutionMatrix;
+// As we are working with objects & references, we make a hard copy to avoid modifying arr values 
+function copyMainMatrix(matrix) {
+    const arr = [];
+    for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+        const temp = [];
+        for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+            const val = matrix[i][j].getValue();
+            const toPush = Math.random() > 0.60 ? val : null; // Here we change
+            const modifiable = toPush === null;
+            const gridnode = new GridNode_1.GridNode(toPush, modifiable);
+            temp.push(gridnode);
+        }
+        arr.push(temp);
+    }
+    return arr;
+}
+// As we are working with objects & references, we make a hard copy to avoid modifying arr values 
+function makeCopyArr(arr) {
+    const copyArr = [];
+    for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+        const temp = [];
+        for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+            const val = arr[i][j].getValue();
+            const modifiable = arr[i][j].isModifiable();
+            const gridnode = new GridNode_1.GridNode(val, modifiable);
+            temp.push(gridnode);
+        }
+        copyArr.push(temp);
+    }
+    return copyArr;
+}
+function areSame(arr1, arr2) {
+    if (!arr2)
+        return false;
+    for (let i = 0; i < constants_1.SIDE_LENGTH; i++) {
+        for (let j = 0; j < constants_1.SIDE_LENGTH; j++) {
+            if (arr1[i][j].getValue() !== arr2[i][j].getValue())
+                return false;
+        }
+    }
+    return true;
+}
+
+},{"../GridNode":3,"../constants":13,"./SudokuGeneratorUtils":7}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SudokuValidator = void 0;
@@ -892,7 +1043,7 @@ class SudokuValidator {
 }
 exports.SudokuValidator = SudokuValidator;
 
-},{"../constants":12,"./SudokuGeneratorUtils":7,"./SudokuHTMLHandler":8}],11:[function(require,module,exports){
+},{"../constants":13,"./SudokuGeneratorUtils":7,"./SudokuHTMLHandler":8}],12:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Timer = void 0;
@@ -945,13 +1096,13 @@ Timer.minutes = 0;
 Timer.hours = 0;
 Timer.intervalID = 0;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SIDE_LENGTH = void 0;
 exports.SIDE_LENGTH = 9;
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testPerformance = void 0;
