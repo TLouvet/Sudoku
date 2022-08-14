@@ -35,6 +35,9 @@ class DigitSelectors {
             this.makeNewCurrent(id, node);
         });
     }
+    removeHTML() {
+        document.getElementById("selectors").replaceChildren();
+    }
     // Current btn operations
     unselect() {
         var _a;

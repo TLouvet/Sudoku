@@ -1,5 +1,6 @@
 import { startSudokuHTMLHandlePerfTest } from "./script/PerfTest/SudokuHTMLHandlers";
 import { SudokuBoard } from "./script/Sudoku";
+import { getSameSolutionMatrix } from "./script/Sudoku/SudokuSolver";
 import { Timer } from "./script/Timer";
 
 const sudoku = new SudokuBoard();
@@ -33,7 +34,8 @@ function main() {
 }
 
 // TODO =>
-// 2) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 1) Est-ce un vrai sudoku (1 solution) - pour l'instant les grilles peuvent avoir plus d'une solution, ce qui n'est pas optimal
+// 2) Empêcher saisie d'une valeur si son bouton est hidden ?
 
 // TESTS 
 if (debug) {

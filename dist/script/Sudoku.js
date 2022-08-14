@@ -4,6 +4,7 @@ exports.SudokuBoard = void 0;
 const DigitSelectors_1 = require("./DigitSelectors");
 const SudokuHTMLHandler_1 = require("./Sudoku/SudokuHTMLHandler");
 const SudokuMatrixComponent_1 = require("./Sudoku/SudokuMatrixComponent");
+const SudokuSolver_1 = require("./Sudoku/SudokuSolver");
 class SudokuBoard {
     constructor() {
         this.htmlHandler = new SudokuHTMLHandler_1.SudokuHTMLHandler();
@@ -21,12 +22,16 @@ class SudokuBoard {
      * @param id
      */
     onFirstCreation(id) {
-        this.htmlHandler.createBoard(id, this.digits);
-        this.digits.generate();
-        this.matrix.startFillProcess();
-        this.htmlHandler.putToHTML(this.matrix.getMatrix());
-        this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
-        this.htmlHandler.highlightSquaresOnClick();
+        SudokuHTMLHandler_1.SudokuHTMLHandler.createLoader();
+        window.setTimeout(() => {
+            this.matrix.startFillProcess();
+            const solution = (0, SudokuSolver_1.getSameSolutionMatrix)(this.matrix.getMatrix());
+            this.htmlHandler.createBoard(id, this.digits);
+            this.digits.generate();
+            this.htmlHandler.putToHTML(solution, this.matrix.getMatrix());
+            this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+            this.htmlHandler.highlightSquaresOnClick();
+        }, 1000);
     }
     /**
      * User asking to get a new grid
@@ -34,11 +39,20 @@ class SudokuBoard {
     onRegeneration() {
         this.matrix.clear();
         this.htmlHandler.eraseModifiableInput();
+        this.digits.removeHTML();
         this.clearBoard();
-        this.matrix.startFillProcess();
-        this.htmlHandler.putToHTML(this.matrix.getMatrix());
-        this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
-        this.htmlHandler.removeWinMessage();
+        SudokuHTMLHandler_1.SudokuHTMLHandler.createLoader();
+        window.setTimeout(() => {
+            this.matrix.startFillProcess();
+            const solution = (0, SudokuSolver_1.getSameSolutionMatrix)(this.matrix.getMatrix());
+            // Remove loader
+            this.htmlHandler.createBoard('sudoku-section', this.digits);
+            this.digits.generate();
+            this.htmlHandler.putToHTML(solution, this.matrix.getMatrix());
+            this.htmlHandler.addSquareKeyboardListeners(this.matrix.getMatrix());
+            this.htmlHandler.highlightSquaresOnClick();
+            this.htmlHandler.removeWinMessage();
+        }, 1000);
     }
     /**
      * Erase user-values entered for current Grid
@@ -57,6 +71,13 @@ class SudokuBoard {
         this.digits.unselect();
         this.htmlHandler.setCurrentSelectedValue("");
         this.htmlHandler.clearNodesBackground();
+    }
+    /**
+     * Gets the GridNode matrix
+     * @returns
+     */
+    getMatrix() {
+        return this.matrix.getMatrix();
     }
 }
 exports.SudokuBoard = SudokuBoard;
